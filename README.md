@@ -1,0 +1,2 @@
+# majitsunagu
+マジつなぐ
