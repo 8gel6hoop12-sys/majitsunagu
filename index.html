@@ -1,0 +1,438 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#2563eb">
+<title>マジつなぐ</title>
+
+<!-- PWA / アイコン -->
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="./icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="./icons/favicon-16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="./icons/apple-touch-icon-180.png">
+
+<style>
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;padding:0}
+:root{--bg:#f7f9fc; --surface:#fff; --text:#0f172a; --muted:#64748b; --primary:#2563eb; --primary-weak:#e8f0ff; --border:#e5e7eb; --radius:18px; --shadow:0 10px 28px rgba(2,6,23,.08); --container:1100px;}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans JP",sans-serif;color:var(--text);background:var(--bg);line-height:1.6}
+a{text-decoration:none;color:inherit}
+.container{width:min(100% - 2rem, var(--container));margin-inline:auto}
+.section{padding:clamp(24px,4vw,40px) 0}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:1rem 1.25rem}
+.site-header{position:sticky;top:0;z-index:10;background:var(--surface);border-bottom:1px solid var(--border)}
+.header-inner{display:flex;align-items:center;justify-content:space-between;padding:.85rem 0}
+.brand{display:flex;align-items:center;gap:.6rem}
+.brand .logo{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,var(--primary),#60a5fa)}
+.brand .title{font-weight:800}
+.nav{display:flex;gap:.25rem;flex-wrap:wrap}
+.nav a{padding:.5rem .75rem;border-radius:8px}
+.nav a.is-active,.nav a:hover{background:var(--primary-weak);color:var(--primary)}
+.toolsbar{display:flex;gap:.5rem;align-items:center}
+.btn{display:inline-flex;align-items:center;justify-content:center;padding:.6rem 1rem;border-radius:12px;font-weight:700;background:var(--primary);color:#fff;border:1px solid transparent;box-shadow:0 6px 16px rgba(37,99,235,.25);cursor:pointer}
+.btn--ghost{background:transparent;color:var(--primary);border:1px solid var(--primary)}
+.btn--sm{padding:.45rem .7rem;font-weight:600}
+.badge{background:var(--primary-weak);color:var(--primary);border:1px solid #d9e7ff;padding:.15rem .5rem;border-radius:999px;font-size:.78rem}
+
+/* 検索 */
+.hero{display:block}
+.hero-search{display:grid;gap:.5rem;grid-template-columns:1fr 1fr 1fr auto}
+.hero-search input,.hero-search select{padding:.7rem .95rem;border:1px solid var(--border);border-radius:999px;background:#fff}
+@media(max-width:900px){.hero-search{grid-template-columns:1fr 1fr}}
+.range{display:grid;gap:.5rem;margin-top:.8rem}
+.range-row{display:grid;grid-template-columns:1fr 1fr auto;gap:.5rem;align-items:center}
+.range input[type="date"]{padding:.6rem .9rem;border:1px solid var(--border);border-radius:999px;background:#fff}
+
+/* 一覧（1カラム・写真主役） */
+.grid{display:grid;grid-template-columns:1fr;gap:1rem}
+.card-photo{position:relative;overflow:hidden;border-radius:20px;background:#e5e7eb;min-height:420px}
+@media(max-width:700px){.card-photo{min-height:320px}}
+.card-photo .img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform .25s ease}
+.card-photo:hover .img{transform:scale(1.02)}
+.card-photo .overlay{position:absolute;left:0;right:0;bottom:0;padding:18px 20px 16px;background:linear-gradient(180deg,rgba(0,0,0,0) 20%, rgba(0,0,0,.55) 70%, rgba(0,0,0,.75) 100%);color:#fff}
+.overlay .title{margin:0 0 6px;font-size:1.25rem;font-weight:800;letter-spacing:.2px}
+.overlay .meta{display:flex;gap:.6rem;flex-wrap:wrap;font-size:.95rem;opacity:.95}
+.meta .chip{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.24);padding:.1rem .6rem;border-radius:999px}
+.meta .dim{opacity:.9}
+.card-photo .click{position:absolute;inset:0}
+
+/* フォーム/運営/ドロップゾーン */
+.form{display:grid;gap:1rem}
+.field{display:grid;gap:.45rem}
+.field input,.field textarea,.field select{width:100%;padding:.85rem 1rem;border-radius:10px;border:1px solid var(--border);background:#fff}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+@media(max-width:700px){.grid2{grid-template-columns:1fr}}
+.dropzone{position:relative;border:2px dashed #bfdbfe;border-radius:16px;background:#f8fbff;padding:1rem;text-align:center}
+.dropzone.is-over{background:#eef6ff;border-color:#60a5fa}
+.dz-in{display:flex;gap:.4rem;flex-direction:column;align-items:center;justify-content:center;min-height:120px;color:#1e3a8a}
+.dz-preview{display:none;width:100%;max-height:300px;object-fit:cover;border-radius:12px;margin-top:.6rem}
+.table{width:100%;border-collapse:separate;border-spacing:0 8px}
+.table th{font-size:.9rem;color:var(--muted);text-align:left;padding:.25rem .5rem}
+.table td{padding:.6rem .7rem;background:#fff;border:1px solid var(--border)}
+
+/* モーダル */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;padding:1rem}
+.modal .box{background:#fff;border-radius:16px;max-width:980px;width:100%;max-height:90vh;overflow:auto;padding:1rem 1.25rem}
+.modal.show{display:flex}
+.pre{white-space:pre-wrap;background:#fbfdff;border:1px solid var(--border);padding:.8rem;border-radius:10px}
+.small{font-size:.9rem;color:var(--muted)}
+</style>
+</head>
+<body>
+<header class="site-header">
+  <div class="container header-inner">
+    <div class="brand"><div class="logo"></div><div class="title">マジつなぐ</div></div>
+    <nav class="nav">
+      <a href="#" data-tab="list"   class="is-active">探す</a>
+      <a href="#" data-tab="submit" id="submitLink">投稿</a>
+      <a href="#" data-tab="admin"  id="adminLink">運営</a>
+    </nav>
+    <div class="toolsbar">
+      <button class="btn--ghost btn--sm" id="exportBtn">バックアップ</button>
+      <label class="btn--ghost btn--sm" for="importFile" style="cursor:pointer">復元</label>
+      <input id="importFile" type="file" accept="application/json" hidden>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section">
+    <div class="container">
+      <!-- list -->
+      <div id="tab-list">
+        <div class="hero">
+          <div class="card">
+            <h3 style="margin:.2rem 0">検索</h3>
+            <form class="hero-search" id="searchForm">
+              <input type="search" id="q" placeholder="キーワード（例：LT, キャリア, ハッカソン）">
+              <select id="category">
+                <option value="">カテゴリ</option>
+                <option>キャリア</option><option>コミュニティ</option><option>勉強会</option><option>交流</option><option>その他</option>
+              </select>
+              <select id="mode">
+                <option value="">形式</option>
+                <option>オンライン</option><option>オフライン</option><option>ハイブリッド</option>
+              </select>
+              <button class="btn" type="submit">絞り込み</button>
+            </form>
+            <div class="range">
+              <div class="range-row">
+                <input type="date" id="startDate">
+                <input type="date" id="endDate">
+                <div style="display:flex;gap:.5rem">
+                  <button class="btn btn--ghost btn--sm" id="clearRange" type="button">クリア</button>
+                  <button class="btn btn--ghost btn--sm" id="applyRange" type="button">適用</button>
+                </div>
+              </div>
+              <span class="small">開始日と終了日で期間絞り込み（片方だけでもOK）。承認済みのみ表示。</span>
+            </div>
+          </div>
+        </div>
+        <div id="cards" class="grid" style="margin-top:1rem"></div>
+      </div>
+
+      <!-- submit -->
+      <div id="tab-submit" style="display:none">
+        <div class="card">
+          <h2>イベント投稿（画像1枚・ドラッグ&ドロップ）</h2>
+          <p class="small">保存後は「運営」で承認して公開。データはこの端末のブラウザに保存されます。</p>
+          <form class="form" id="submitForm">
+            <div class="grid2">
+              <label class="field"><span>★ タイトル</span><input name="title" required></label>
+              <label class="field"><span>カテゴリ</span>
+                <select name="category"><option></option><option>キャリア</option><option>コミュニティ</option><option>勉強会</option><option>交流</option><option>その他</option></select>
+              </label>
+              <label class="field"><span>主催</span><input name="organizer"></label>
+              <label class="field"><span>開催日</span><input type="date" name="date"></label>
+              <label class="field"><span>時間</span><input name="time" placeholder="18:00-20:00"></label>
+              <label class="field"><span>場所</span><input name="location" placeholder="渋谷 / Zoom など"></label>
+              <label class="field"><span>形式</span>
+                <select name="mode"><option></option><option>オンライン</option><option>オフライン</option><option>ハイブリッド</option></select>
+              </label>
+              <label class="field"><span>参加費</span><input name="price" placeholder="無料 / 学割 など"></label>
+              <label class="field"><span>定員</span><input name="capacity" placeholder="先着50名 など"></label>
+              <label class="field"><span>タグ（カンマ区切り）</span><input name="tags" placeholder="LT,交流,ハッカソン"></label>
+            </div>
+            <label class="field"><span>★ 概要（1〜3行）</span><textarea name="summary" rows="3" required></textarea></label>
+            <label class="field"><span>詳細（任意）</span><textarea name="details" rows="5"></textarea></label>
+            <label class="field"><span>申込URL（任意）</span><input name="applyUrl" placeholder="https://"></label>
+
+            <h3>画像（1枚）</h3>
+            <div class="dropzone" id="dropzone">
+              <input type="file" id="fileInput" name="image" accept="image/*" hidden>
+              <div class="dz-in">
+                <div>📷 ここにドラッグ&ドロップ or <button type="button" class="btn btn--ghost" id="pickBtn">ファイルを選択</button></div>
+                <div class="small">※ 1枚のみ。サイズ大は自動圧縮</div>
+              </div>
+              <img id="preview" class="dz-preview" alt="">
+            </div>
+
+            <div class="tools" style="margin-top:.5rem">
+              <button class="btn" type="submit">保存（承認待ち）</button>
+              <button class="btn btn--ghost" type="reset">クリア</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- admin -->
+      <div id="tab-admin" style="display:none">
+        <div class="card">
+          <h2>運営ダッシュボード</h2>
+          <table class="table" id="adminTable">
+            <thead><tr><th>承認</th><th>基本</th><th>日付/時間</th><th>場所</th><th>操作</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- 詳細モーダル -->
+<div class="modal" id="modal">
+  <div class="box">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:1rem">
+      <h2 id="m-title" style="margin:.2rem 0"></h2>
+      <button class="btn btn--ghost btn--sm" id="m-close">閉じる</button>
+    </div>
+    <div id="m-body"></div>
+  </div>
+</div>
+
+<script>
+/* ---------- storage ---------- */
+const KEY = "majitsunagu-v1";
+const load = () => JSON.parse(localStorage.getItem(KEY) || "[]");
+const save = (arr) => localStorage.setItem(KEY, JSON.stringify(arr));
+
+/* ---------- tabs & hash shortcuts ---------- */
+const tabs = document.querySelectorAll('.nav a');
+const views = {list:'#tab-list', submit:'#tab-submit', admin:'#tab-admin'};
+function switchTab(tab){
+  tabs.forEach(x=>x.classList.toggle('is-active', x.dataset.tab===tab));
+  Object.values(views).forEach(sel=>document.querySelector(sel).style.display='none');
+  document.querySelector(views[tab]).style.display='';
+  if(tab==='list'){ renderList(); }
+  if(tab==='admin'){ renderAdmin(); }
+}
+tabs.forEach(a=>{
+  a.addEventListener('click', e=>{ e.preventDefault(); switchTab(a.dataset.tab); history.replaceState(null,'',`#${a.dataset.tab}`); });
+});
+window.addEventListener('load', ()=>{
+  const hash = (location.hash||'').replace('#','');
+  if(hash==='submit') switchTab('submit');
+  else if(hash==='admin') switchTab('admin');
+  else switchTab('list');
+});
+
+/* ---------- image handling ---------- */
+const dz = document.getElementById('dropzone');
+const input = document.getElementById('fileInput');
+const pick = document.getElementById('pickBtn');
+const preview = document.getElementById('preview');
+function fileToDataURL(file, maxW=1600, quality=0.86){
+  return new Promise((resolve,reject)=>{
+    if(!file) return resolve("");
+    const img = new Image(); const reader = new FileReader();
+    reader.onload = ()=>{ img.src = reader.result; };
+    reader.onerror = reject;
+    img.onload = ()=>{
+      const scale = Math.min(1, maxW / img.width);
+      const w = Math.round(img.width * scale), h = Math.round(img.height * scale);
+      const canvas = document.createElement('canvas'); canvas.width=w; canvas.height=h;
+      const ctx = canvas.getContext('2d'); ctx.drawImage(img,0,0,w,h);
+      resolve(canvas.toDataURL('image/jpeg', quality));
+    };
+    reader.readAsDataURL(file);
+  });
+}
+['dragenter','dragover','dragleave','drop'].forEach(ev=>{
+  dz?.addEventListener(ev, e=>{ e.preventDefault(); e.stopPropagation(); }, false);
+});
+['dragenter','dragover'].forEach(ev=>{ dz?.addEventListener(ev, ()=>dz.classList.add('is-over')); });
+['dragleave','drop'].forEach(ev=>{ dz?.addEventListener(ev, ()=>dz.classList.remove('is-over')); });
+dz?.addEventListener('drop', e=>{
+  if(!e.dataTransfer.files.length) return;
+  input.files = e.dataTransfer.files;
+  preview.src = URL.createObjectURL(input.files[0]); preview.style.display='block';
+});
+pick?.addEventListener('click', ()=> input.click());
+input?.addEventListener('change', ()=> { if(input.files[0]){ preview.src = URL.createObjectURL(input.files[0]); preview.style.display='block'; }});
+
+/* ---------- list rendering with date range ---------- */
+let rangeStart = "", rangeEnd = "";
+function inRange(dateStr){
+  if(!dateStr) return true;
+  if(!rangeStart && !rangeEnd) return true;
+  if(rangeStart && !rangeEnd) return dateStr >= rangeStart;
+  if(!rangeStart && rangeEnd) return dateStr <= rangeEnd;
+  return (dateStr >= rangeStart && dateStr <= rangeEnd);
+}
+function renderList(){
+  const q=document.getElementById('q').value.trim().toLowerCase();
+  const cat=document.getElementById('category').value;
+  const mode=document.getElementById('mode').value;
+  const data=load().filter(e=>e.approved);
+  const filtered=data.filter(e=>{
+    const text=[e.title,e.organizer,e.summary,e.tags].join(' ').toLowerCase();
+    const hit=!q || text.includes(q);
+    const hc=!cat || e.category===cat;
+    const hm=!mode || e.mode===mode;
+    const hd=inRange(e.date||"");
+    return hit && hc && hm && hd;
+  });
+  const wrap=document.getElementById('cards'); wrap.innerHTML="";
+  if(!filtered.length){ wrap.innerHTML = '<p class="small">該当するイベントがありません。</p>'; return; }
+  filtered.sort((a,b)=>String(a.date).localeCompare(b.date));
+  filtered.forEach(ev=>{
+    const fig=document.createElement('figure'); fig.className='card-photo';
+    const ph = `<svg class="img" viewBox="0 0 16 9" preserveAspectRatio="xMidYMid slice"><rect width="16" height="9" fill="#e5e7eb"/></svg>`;
+    fig.innerHTML=`
+      ${ev.image?`<img class="img" src="${ev.image}" alt="">`:ph}
+      <a class="click" href="#" data-id="${ev.id}" aria-label="${ev.title}"></a>
+      <figcaption class="overlay">
+        <div class="title">${ev.title}</div>
+        <div class="meta">
+          <span class="chip">${ev.category||'イベント'}</span>
+          <span class="chip">${ev.mode||'-'}</span>
+          ${ev.location?`<span class="chip">${ev.location}</span>`:''}
+          <span class="dim">${ev.date||''}${ev.time?` ${ev.time}`:''}</span>
+        </div>
+      </figcaption>
+    `;
+    wrap.appendChild(fig);
+  });
+}
+
+/* ---------- detail modal ---------- */
+const modal=document.getElementById('modal');
+document.getElementById('m-close').onclick=()=> modal.classList.remove('show');
+document.addEventListener('click', e=>{
+  const link=e.target.closest('a.click'); if(!link) return;
+  e.preventDefault();
+  const id=link.dataset.id;
+  const ev=load().find(x=>String(x.id)===String(id)); if(!ev) return;
+  document.getElementById('m-title').textContent=ev.title;
+  document.getElementById('m-body').innerHTML=`
+    ${ev.image?`<img src="${ev.image}" style="width:100%;height:520px;object-fit:cover;border-radius:16px;margin-bottom:.6rem">`:''}
+    <div class="small" style="margin-bottom:.6rem">
+      <span class="badge">${ev.category||'イベント'}</span>
+      <span class="badge">${ev.mode||'-'}</span>
+      ${ev.location?`<span class="badge">${ev.location}</span>`:''}
+    </div>
+    <ul class="small" style="display:flex;flex-wrap:wrap;gap:.8rem;margin:.2rem 0 1rem;color:#334155">
+      <li>${ev.date||''} ${ev.time||''}</li>
+      <li>主催：${ev.organizer||''}</li>
+      <li>参加費：${ev.price||'無料/未定'}</li>
+      <li>定員：${ev.capacity||'未定'}</li>
+      ${ev.tags?`<li>タグ：${ev.tags}</li>`:''}
+    </ul>
+    <h3>詳細</h3>
+    <div class="pre">${(ev.details||ev.summary||'').replace(/&/g,'&amp;').replace(/</g,'&lt;')}</div>
+    ${ev.applyUrl?`<p style="margin-top:.8rem"><a class="btn" href="${ev.applyUrl}" target="_blank" rel="noopener">申込ページへ</a></p>`:''}
+  `;
+  modal.classList.add('show');
+});
+
+/* ---------- submit ---------- */
+document.getElementById('searchForm').addEventListener('submit', e=>{ e.preventDefault(); renderList(); });
+document.getElementById('submitForm').addEventListener('submit', async e=>{
+  e.preventDefault();
+  const f=new FormData(e.currentTarget);
+  const imgFile=document.getElementById('fileInput').files[0];
+  const dataUrl=imgFile?await fileToDataURL(imgFile):"";
+  const events=load();
+  const item={
+    id:Date.now(), title:f.get('title')||'', category:f.get('category')||'',
+    organizer:f.get('organizer')||'', date:f.get('date')||'', time:f.get('time')||'',
+    location:f.get('location')||'', mode:f.get('mode')||'', price:f.get('price')||'',
+    capacity:f.get('capacity')||'', tags:f.get('tags')||'',
+    summary:f.get('summary')||'', details:f.get('details')||'',
+    applyUrl:f.get('applyUrl')||'', image:dataUrl, approved:false,
+    created:new Date().toISOString().slice(0,10)
+  };
+  events.push(item); save(events);
+  alert('保存しました。運営の承認後に公開されます。');
+  e.target.reset(); preview.style.display='none';
+  renderList();
+});
+
+/* ---------- date range inputs ---------- */
+const startInput=document.getElementById('startDate');
+const endInput=document.getElementById('endDate');
+function normalizeRange(){
+  if(startInput.value && endInput.value && endInput.value < startInput.value){
+    const t=startInput.value; startInput.value=endInput.value; endInput.value=t;
+  }
+  rangeStart=startInput.value||""; rangeEnd=endInput.value||"";
+}
+document.getElementById('clearRange').onclick=()=>{ rangeStart=""; rangeEnd=""; startInput.value=""; endInput.value=""; renderList(); };
+document.getElementById('applyRange').onclick=()=>{ normalizeRange(); renderList(); };
+startInput.addEventListener('change', ()=>{ normalizeRange(); renderList(); });
+endInput.addEventListener('change', ()=>{ normalizeRange(); renderList(); });
+
+/* ---------- admin ---------- */
+function renderAdmin(){
+  const tbody=document.querySelector('#adminTable tbody'); tbody.innerHTML='';
+  load().sort((a,b)=>String(a.date).localeCompare(b.date)).forEach(ev=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td><input type="checkbox" ${ev.approved?'checked':''} data-act="approve" data-id="${ev.id}"></td>
+      <td><strong>${ev.title}</strong><div class="small">主催：${ev.organizer||''}</div>
+        <div class="small" style="margin-top:.25rem"><span class="badge">${ev.category||''}</span> <span class="badge">${ev.mode||''}</span></div></td>
+      <td>${ev.date||''} ${ev.time||''}</td>
+      <td>${ev.location||''}</td>
+      <td><button class="btn btn--ghost btn--sm" data-act="delete" data-id="${ev.id}">削除</button></td>`;
+    tbody.appendChild(tr);
+  });
+}
+document.getElementById('tab-admin').addEventListener('change', e=>{
+  const t=e.target;
+  if(t.dataset.act==='approve'){
+    const arr=load(); const ev=arr.find(x=>String(x.id)===t.dataset.id);
+    if(ev){ ev.approved=t.checked; save(arr); renderList(); }
+  }
+});
+document.getElementById('tab-admin').addEventListener('click', e=>{
+  const btn=e.target.closest('button[data-act="delete"]'); if(!btn) return;
+  if(!confirm('削除しますか？')) return;
+  const arr=load().filter(x=>String(x.id)!==btn.dataset.id); save(arr);
+  renderAdmin(); renderList();
+});
+
+/* ---------- import/export ---------- */
+document.getElementById('exportBtn').onclick=()=>{
+  const blob=new Blob([JSON.stringify(load(),null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download='majitsunagu-backup.json'; a.click();
+};
+document.getElementById('importFile').onchange=async e=>{
+  const file=e.target.files[0]; if(!file) return;
+  const text=await file.text(); try{
+    const arr=JSON.parse(text); if(!Array.isArray(arr)) throw 0;
+    save(arr); alert('復元しました'); renderList(); renderAdmin();
+  }catch{ alert('JSONが不正です'); }
+};
+
+/* ---------- 初期データ ---------- */
+if(load().length===0){
+  const today=new Date().toISOString().slice(0,10);
+  save([{ id:Date.now()-2, title:"就活スタートダッシュ相談会", category:"キャリア", organizer:"Career Lab",
+    date:today, time:"18:00-19:30", location:"オンライン", mode:"オンライン",
+    price:"無料", capacity:"先着50名", tags:"面接,ES,自己分析",
+    summary:"面談のコツやES添削ポイントをQ&A形式で紹介。", details:"元メガベン出身メンターが丁寧に解説。",
+    applyUrl:"https://example.com/apply", image:"", approved:true, created:today }]);
+}
+renderList();
+
+/* ---------- Service Worker 登録 ---------- */
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=> {
+    navigator.serviceWorker.register('./sw.js').catch(console.error);
+  });
+}
+</script>
+</body>
+</html>
