@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#2563eb">
 <title>マジつなぐ</title>
 
-<!-- PWA / アイコン（前回のまま） -->
+<!-- PWA / アイコン -->
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="apple-touch-icon" href="./icons/app-icon.png">
 <link rel="icon" type="image/png" href="./icons/app-icon.png">
@@ -27,13 +27,13 @@ body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans JP",sans-s
 .brand strong{font-weight:800}
 .iconbtn{display:inline-flex;width:42px;height:42px;border-radius:12px;align-items:center;justify-content:center;border:1px solid var(--border);background:#fff;cursor:pointer}
 .iconbtn:active{transform:scale(.98)}
-.menu{position:fixed;top:60px;right:1rem;background:#fff;border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);min-width:240px;display:none;overflow:hidden}
+.menu{position:fixed;top:60px;right:1rem;background:#fff;border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);min-width:260px;display:none;overflow:hidden}
 .menu.show{display:block}
-.menu a,.menu button{display:flex;width:100%;gap:.6rem;align-items:center;padding:.8rem 1rem;border:0;background:#fff;text-align:left;cursor:pointer}
-.menu a:hover,.menu button:hover{background:#f8fbff}
+.menu button{display:flex;width:100%;gap:.6rem;align-items:center;padding:.85rem 1rem;border:0;background:#fff;text-align:left;cursor:pointer}
+.menu button:hover{background:#f8fbff}
+.menu .sep{height:1px;background:var(--border);margin:.25rem 0}
 .badge{display:inline-block;padding:.15rem .5rem;border-radius:999px;background:var(--primary-weak);border:1px solid #d9e7ff;color:var(--primary);font-size:.8rem}
 
-/* ==== コンポーネント ==== */
 .btn{display:inline-flex;align-items:center;gap:.4rem;padding:.6rem 1rem;border-radius:12px;border:1px solid var(--primary);color:var(--primary);background:#fff;cursor:pointer}
 .btn--fill{background:var(--primary);color:#fff;border-color:var(--primary);box-shadow:0 6px 16px rgba(37,99,235,.25)}
 .card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:1rem 1.2rem}
@@ -49,6 +49,8 @@ body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans JP",sans-s
 .input, .select, .textarea{padding:.75rem .9rem;border:1px solid var(--border);border-radius:10px;background:#fff}
 .row{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:.5rem}
 @media(max-width:900px){.row{grid-template-columns:1fr 1fr}}
+.row2{display:grid;grid-template-columns:1fr 1fr auto;gap:.5rem;align-items:center;margin-top:.6rem}
+@media(max-width:680px){.row2{grid-template-columns:1fr 1fr}}
 .formgrid{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}
 @media(max-width:700px){.formgrid{grid-template-columns:1fr}}
 
@@ -65,10 +67,6 @@ body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans JP",sans-s
 .pill{display:inline-flex;gap:.35rem;align-items:center;padding:.22rem .6rem;border-radius:999px;border:1px solid var(--border);font-size:.82rem;background:#fff}
 .pill--ok{border-color:#16a34a;color:#16a34a}
 .pill--warn{border-color:#f59e0b;color:#b45309}
-
-/* 小さめの「投稿したい会社はこちら」「運営側はこちら」 */
-.quickbar{display:flex;gap:.5rem;flex-wrap:wrap;margin:.6rem 0}
-.quickbar a{font-size:.9rem}
 </style>
 </head>
 <body>
@@ -78,27 +76,22 @@ body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans JP",sans-s
     <div style="display:flex;gap:.5rem;align-items:center">
       <span class="pill pill--ok" id="attendCountPill" title="参加したイベント数">参加 0</span>
       <button id="menuBtn" class="iconbtn" aria-label="メニュー" title="メニュー">
-        <!-- ハンバーガー -->
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M3 12h18M3 18h18" stroke="#0f172a" stroke-width="2" stroke-linecap="round"/></svg>
       </button>
     </div>
   </div>
-  <!-- ドロップダウンメニュー -->
+  <!-- メニュー（下2つが会社投稿・運営） -->
   <nav class="menu" id="menu">
     <button data-view="list">🔎 探す</button>
-    <button data-view="submit-company">🏢 投稿したい会社はこちら</button>
     <button data-view="attended">✅ 参加したイベント</button>
+    <button data-view="contact">✉️ お問い合わせ</button>
+    <div class="sep"></div>
+    <button data-view="submit-company">🏢 投稿したい会社はこちら</button>
     <button data-view="admin">🛠️ 運営側はこちら</button>
   </nav>
 </header>
 
 <main class="container" style="padding:16px 0 28px">
-  <!-- クイックリンク（小さめ） -->
-  <div class="quickbar">
-    <a href="#" data-view="submit-company" class="badge">投稿したい会社はこちら</a>
-    <a href="#" data-view="admin" class="badge">運営側はこちら</a>
-  </div>
-
   <!-- 探す -->
   <section id="view-list">
     <div class="card" style="margin-bottom:12px">
@@ -113,13 +106,22 @@ body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans JP",sans-s
         </select>
         <button class="btn btn--fill" type="submit">絞り込み</button>
       </form>
-      <div class="small" style="margin-top:.4rem">※ 承認済みのみ表示。右上メニューの「参加したイベント」から確認できます。</div>
+      <!-- 期間フィルタ -->
+      <div class="row2">
+        <input type="date" id="startDate" class="input">
+        <input type="date" id="endDate" class="input">
+        <div style="display:flex;gap:.5rem;justify-content:flex-end">
+          <button class="btn" id="clearRange" type="button">クリア</button>
+          <button class="btn btn--fill" id="applyRange" type="button">適用</button>
+        </div>
+      </div>
+      <div class="small" style="margin-top:.3rem">開始日と終了日で期間絞り込み（片方だけでもOK）。承認済みのみ表示。</div>
     </div>
 
     <div id="cards" class="grid"></div>
   </section>
 
-  <!-- 会社投稿（一般・パス不要） -->
+  <!-- 会社投稿 -->
   <section id="view-submit-company" style="display:none">
     <div class="card">
       <h2 style="margin:.2rem 0">企業・団体の方の投稿</h2>
@@ -171,6 +173,23 @@ body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans JP",sans-s
       </table>
     </div>
   </section>
+
+  <!-- お問い合わせ -->
+  <section id="view-contact" style="display:none">
+    <div class="card">
+      <h2 style="margin:.2rem 0">お問い合わせ</h2>
+      <p class="small">件名と内容をご入力ください。送信するとメールアプリが開き、同時にこの端末に控えを保存します。</p>
+      <form id="contactForm" style="display:grid;gap:.6rem">
+        <input id="cSubject" class="input" placeholder="件名（必須）" required>
+        <input id="cEmail" class="input" type="email" placeholder="返信用メール（任意）">
+        <textarea id="cBody" class="textarea" rows="6" placeholder="内容（必須）" required></textarea>
+        <div style="display:flex;gap:.6rem;flex-wrap:wrap">
+          <button class="btn btn--fill" type="submit">送信</button>
+          <button class="btn" type="button" id="contactExport">控えをバックアップ</button>
+        </div>
+      </form>
+    </div>
+  </section>
 </main>
 
 <!-- 詳細モーダル -->
@@ -202,25 +221,28 @@ body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans JP",sans-s
 
 <script>
 /* ================== 設定 ================== */
-const ADMIN_PASS = "A7B9C3D1"; // ★ 8桁英数字（ここを変更でOK）
+const ADMIN_PASS = "A7B9C3D1"; // ★ 8桁英数字
 const KEY_EVENTS = "majitsunagu-v1";
 const KEY_ATTEND = "majitsunagu-attend";
 const KEY_ADMIN_SESSION = "majitsunagu-admin-session";
+const KEY_CONTACTS = "majitsunagu-contacts";
 
 /* ================== ストレージ ================== */
 const loadEvents = () => JSON.parse(localStorage.getItem(KEY_EVENTS) || "[]");
 const saveEvents = (arr) => localStorage.setItem(KEY_EVENTS, JSON.stringify(arr));
 const loadAttend = () => JSON.parse(localStorage.getItem(KEY_ATTEND) || "[]");
 const saveAttend = (arr) => localStorage.setItem(KEY_ATTEND, JSON.stringify(arr));
+const loadContacts = () => JSON.parse(localStorage.getItem(KEY_CONTACTS) || "[]");
+const saveContacts = (arr) => localStorage.setItem(KEY_CONTACTS, JSON.stringify(arr));
 
-/* ================== ビュー切替（メニュー） ================== */
-const views = ["list","submit-company","attended","admin"];
+/* ================== メニュー & ビュー切替 ================== */
+const views = ["list","submit-company","attended","admin","contact"];
 function showView(name){
   views.forEach(v => document.getElementById("view-"+v).style.display = (v===name?"":"none"));
-  // 付随処理
   if(name==="list") renderList();
   if(name==="attended") renderAttended();
   if(name==="admin") ensureAdmin().then(ok=>{ if(ok){ renderAdmin(); } else { showView("list"); }});
+  if(name==="contact"){ /* no-op */ }
   closeMenu();
 }
 const menuBtn = document.getElementById('menuBtn');
@@ -232,9 +254,29 @@ menu.addEventListener('click', (e)=>{
   const btn = e.target.closest('[data-view]'); if(!btn) return;
   e.preventDefault(); showView(btn.dataset.view);
 });
-document.querySelectorAll('.quickbar [data-view]').forEach(a=>{
-  a.addEventListener('click', (e)=>{ e.preventDefault(); showView(a.dataset.view); });
-});
+
+/* ================== 期間フィルタ補助 ================== */
+let rangeStart=""; let rangeEnd="";
+const startInput=document.getElementById('startDate');
+const endInput=document.getElementById('endDate');
+function normalizeRange(){
+  if(startInput.value && endInput.value && endInput.value < startInput.value){
+    const t=startInput.value; startInput.value=endInput.value; endInput.value=t;
+  }
+  rangeStart=startInput.value||""; rangeEnd=endInput.value||"";
+}
+document.getElementById('clearRange').onclick=()=>{ rangeStart=""; rangeEnd=""; startInput.value=""; endInput.value=""; renderList(); };
+document.getElementById('applyRange').onclick=()=>{ normalizeRange(); renderList(); };
+startInput.addEventListener('change', ()=>{ normalizeRange(); });
+endInput.addEventListener('change', ()=>{ normalizeRange(); });
+
+function inRange(dateStr){
+  if(!dateStr) return true;
+  if(!rangeStart && !rangeEnd) return true;
+  if(rangeStart && !rangeEnd) return dateStr >= rangeStart;
+  if(!rangeStart && rangeEnd) return dateStr <= rangeEnd;
+  return (dateStr >= rangeStart && dateStr <= rangeEnd);
+}
 
 /* ================== 検索 & 一覧 ================== */
 function renderList(){
@@ -249,7 +291,8 @@ function renderList(){
     const hit=!q||text.includes(q);
     const hc=!cat||e.category===cat;
     const hm=!mode||e.mode===mode;
-    return hit&&hc&&hm;
+    const hd=inRange(e.date||"");
+    return hit&&hc&&hm&&hd;
   }).sort((a,b)=>String(a.date).localeCompare(b.date));
   if(!filtered.length){ wrap.innerHTML='<p class="small">該当するイベントがありません。</p>'; return; }
   filtered.forEach(ev=>{
@@ -318,7 +361,6 @@ mAttend.onclick=()=>{
   saveAttend(Array.from(set));
   updateAttendCount();
   renderList();
-  // ボタン表示更新
   mAttend.textContent = set.has(String(currentEventId)) ? "参加をやめる" : "参加する";
 };
 
@@ -386,20 +428,15 @@ document.getElementById('pwOk').onclick=()=>{
   }
 };
 function ensureAdmin(){
-  // 既にセッションOKなら true
   if(sessionStorage.getItem(KEY_ADMIN_SESSION)==="1"){ return Promise.resolve(true); }
-  // 入力モーダル表示
   pwInput.value=""; pwModal.style.display='flex';
-  // ユーザー操作の結果をPromiseで待つ
   return new Promise(resolve=>{
     const onHide=()=>{
       pwModal.style.display='none';
-      document.removeEventListener('admin-auth-success', onSuccess);
       resolve(sessionStorage.getItem(KEY_ADMIN_SESSION)==="1");
     };
-    const onSuccess=()=>{ resolve(true); };
     document.getElementById('pwCancel').addEventListener('click', onHide, {once:true});
-    document.getElementById('pwOk').addEventListener('click', ()=>{ if(sessionStorage.getItem(KEY_ADMIN_SESSION)==="1"){ onSuccess(); }}, {once:true});
+    document.getElementById('pwOk').addEventListener('click', ()=>resolve(sessionStorage.getItem(KEY_ADMIN_SESSION)==="1"), {once:true});
   });
 }
 
@@ -435,6 +472,28 @@ document.getElementById('view-admin').addEventListener('click', e=>{
   renderAdmin(); renderList();
 });
 
+/* ================== お問い合わせ ================== */
+document.getElementById('contactForm').addEventListener('submit', e=>{
+  e.preventDefault();
+  const sub=document.getElementById('cSubject').value.trim();
+  const mail=document.getElementById('cEmail').value.trim();
+  const body=document.getElementById('cBody').value.trim();
+  if(!sub || !body){ alert('件名と内容は必須です'); return; }
+  const arr=loadContacts();
+  arr.push({ id:Date.now(), subject:sub, email:mail, body:body, created:new Date().toISOString() });
+  saveContacts(arr);
+  // メールクライアント起動（宛先は適宜差し替えてOK）
+  const to = "contact@example.com";
+  const mailto = `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(sub)}&body=${encodeURIComponent((mail?`【返信用】${mail}\n\n`:"")+body)}`;
+  window.location.href = mailto;
+  alert('お問い合わせを送信（端末に控えを保存しました）');
+  e.target.reset();
+});
+document.getElementById('contactExport').addEventListener('click', ()=>{
+  const blob=new Blob([JSON.stringify(loadContacts(),null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='majitsunagu-contacts.json'; a.click();
+});
+
 /* ================== 初期データ & 初期描画 ================== */
 if(loadEvents().length===0){
   const today=new Date().toISOString().slice(0,10);
@@ -444,8 +503,7 @@ if(loadEvents().length===0){
     summary:"面談のコツやES添削ポイントをQ&A形式で紹介。", details:"元メガベン出身メンターが丁寧に解説。",
     applyUrl:"https://example.com/apply", image:"", approved:true }]);
 }
-renderList();
-updateAttendCount();
+renderList(); updateAttendCount();
 
 /* ================== SW登録 ================== */
 if('serviceWorker' in navigator){ window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js')); }
