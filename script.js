@@ -4,7 +4,7 @@ const SYNC_URL   = "";
 const SYNC_TOKEN = "";
 const CONTACT_TO = "contact@example.com";
 
-const ADMIN_PASS  = "A7B9C3D1";
+const ADMIN_PASS  = "12345678";
 const FAV_KEY     = "majitsunagu-fav";
 const SUBMIT_KEY  = "majitsunagu-submits";
 const USERS_KEY   = "majitsunagu-users";
@@ -58,6 +58,25 @@ function init(){
   renderYearChips();
   applyFilters(1);
   syncAuthUI();
+
+  // 左上ロゴ → 必ずホーム(#list)へ
+const brand = document.getElementById('brand');
+if (brand) {
+  brand.addEventListener('click', (e) => {
+    e.preventDefault();
+    // メニューが開いていたら閉じる
+    const menu = document.getElementById('menu');
+    if (menu) menu.classList.remove('show');
+
+    // ホーム表示に切替（同じ #list のときも実行）
+    location.hash = '#list';
+    handleRoute();                // 画面切替
+    window.scrollTo({ top: 0, behavior: 'smooth' });  // 先頭へ
+    // 起動POPが残っていたら閉じる
+    const pop = document.getElementById('pop');
+    if (pop) pop.style.display = 'none';
+  });
+}
 }
 
 /* ========= ルーティング ========= */
