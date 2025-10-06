@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>マジつなぐ – 求人・イベント</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+
+<!-- ===== 起動POP ===== -->
+<div id="pop" class="pop">
+  <div class="pop-inner">
+    <h1>長期インターン 新着</h1>
+    <div class="pop-ad">広告</div>
+    <div class="pop-actions">
+      <a class="btn line" href="https://lin.ee/yourCode" target="_blank" rel="noopener">LINE公式を友だち追加</a>
+      <button id="popClose" class="btn fill">閉じる</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ヘッダー ===== -->
+<header class="site-header">
+  <div class="container hdr">
+    <a class="brand" href="#"><span class="dot"></span><strong>マジつなぐ</strong></a>
+
+    <div class="header-right">
+      <div class="auth">
+        <button id="btnLogin" class="link">ログイン</button>
+        <span class="sep">/</span>
+        <button id="btnSignup" class="link">新規登録</button>
+        <span id="who" class="who" hidden></span>
+        <button id="btnLogout" class="link" hidden>ログアウト</button>
+      </div>
+
+      <div class="menu-wrap">
+        <button class="menu-btn" id="menuBtn">メニュー ▾</button>
+        <div class="menu" id="menu">
+          <button data-view="submit">採用担当者様</button>
+          <button data-view="contact">お問い合わせ</button>
+          <button data-view="terms">利用規約</button>
+          <button data-view="privacy">プライバシー</button>
+          <button data-view="about">会社情報</button>
+          <div class="sep"></div>
+          <button data-view="admin">管理（承認）</button>
+          <button data-view="profile">プロフィール</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="container main">
+  <section class="circle-row">
+    <div class="circle"></div><div class="circle"></div><div class="circle"></div><div class="circle"></div>
+  </section>
+
+  <!-- ===== 一覧 ===== -->
+  <section id="view-list" class="view on">
+    <div class="card card--filters">
+      <div class="filters-head">
+        <h2 class="h2">求人一覧</h2>
+        <div class="years" id="yearChips" aria-label="卒年"></div>
+      </div>
+
+      <form id="filters" class="filters" autocomplete="off">
+        <label class="field col-2">
+          <span>フリーワード</span>
+          <input id="q" class="ipt" placeholder="会社 / タイトル / 説明 / タグ" />
+        </label>
+
+        <label class="field">
+          <span>並び替え</span>
+          <select id="sort" class="ipt">
+            <option value="new">新着順</option>
+            <option value="old">古い順</option>
+            <option value="wageDesc">時給が高い順</option>
+            <option value="wageAsc">時給が低い順</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>時給（下限）</span>
+          <select id="wageMin" class="ipt">
+            <option value="">指定なし</option>
+            <option value="1000">1000円〜</option>
+            <option value="1200">1200円〜</option>
+            <option value="1500">1500円〜</option>
+            <option value="2000">2000円〜</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>週◯〜</span>
+          <select id="weekMin" class="ipt">
+            <option value="">指定なし</option>
+            <option value="1">週1〜</option>
+            <option value="2">週2〜</option>
+            <option value="3">週3〜</option>
+            <option value="4">週4〜</option>
+            <option value="5">週5〜</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>職種</span>
+          <select id="jobType" class="ipt">
+            <option value="">指定なし</option>
+            <option>エンジニア</option>
+            <option>デザイナー</option>
+            <option>マーケ</option>
+            <option>セールス</option>
+            <option>コンサル</option>
+          </select>
+        </label>
+
+        <div class="field checks">
+          <span>特徴</span>
+          <label><input type="checkbox" id="remote"> リモート可</label>
+          <label><input type="checkbox" id="flex"> フレックス</label>
+          <label><input type="checkbox" id="favOnly"> ★ お気に入りのみ</label>
+          <label class="switch"><input type="checkbox" id="onlyOpen" checked> 募集中のみ</label>
+        </div>
+
+        <label class="field">
+          <span>在籍インターン人数（下限）</span>
+          <select id="minInterns" class="ipt">
+            <option value="">指定なし</option>
+            <option value="1">1人〜</option>
+            <option value="3">3人〜</option>
+            <option value="5">5人〜</option>
+            <option value="10">10人〜</option>
+          </select>
+        </label>
+
+        <div class="field range">
+          <span>期間</span>
+          <input type="date" id="startDate" class="ipt">
+          <span class="wave">〜</span>
+          <input type="date" id="endDate" class="ipt">
+        </div>
+
+        <label class="field">
+          <span>ページサイズ</span>
+          <select id="pageSize" class="ipt"><option>10</option><option>20</option><option>30</option></select>
+        </label>
+
+        <div class="field actions col-2">
+          <button class="btn" type="button" id="resetBtn">条件リセット</button>
+          <button class="btn fill" type="submit">この条件で検索</button>
+        </div>
+      </form>
+
+      <div class="promo-slot" id="promoSlot">ここに訴求広告（jpg）が入ります</div>
+    </div>
+
+    <div class="result-head container--inner">
+      <div id="count">0件</div>
+      <div class="chipbar" id="activeChips"></div>
+    </div>
+
+    <section id="cards" class="grid-cards">
+      <div class="skeleton tall"></div><div class="skeleton tall"></div><div class="skeleton tall"></div>
+    </section>
+    <div id="pager" class="pager"></div>
+  </section>
+
+  <!-- ===== 採用担当者様（投稿） ===== -->
+  <section id="view-submit" class="view">
+    <div class="card">
+      <h2 class="h2">採用担当者様向け：求人投稿</h2>
+      <form id="submitForm" class="form">
+        <input name="title" class="ipt" required placeholder="★ タイトル">
+        <input name="company" class="ipt" required placeholder="★ 会社名">
+        <div class="grid-2">
+          <select name="year" class="ipt" required>
+            <option value="">★ 卒年</option><option>2026</option><option>2027</option><option>2028</option>
+          </select>
+          <select name="jobType" class="ipt">
+            <option>エンジニア</option><option>デザイナー</option><option>マーケ</option><option>セールス</option><option>コンサル</option>
+          </select>
+        </div>
+        <div class="grid-2">
+          <input name="wage" class="ipt" type="number" placeholder="時給（整数）">
+          <input name="week" class="ipt" type="number" placeholder="週◯日〜（整数）">
+        </div>
+        <div class="grid-2">
+          <select name="mode" class="ipt"><option>オンライン</option><option>オフライン</option><option>ハイブリッド</option></select>
+          <input name="place" class="ipt" placeholder="勤務地 / 会場">
+        </div>
+        <div class="grid-2">
+          <input name="date" class="ipt" type="date" placeholder="開始日">
+          <input name="tags" class="ipt" placeholder="タグ（カンマ区切り）">
+        </div>
+        <input name="applyUrl" class="ipt" placeholder="応募URL（任意、httpsから）">
+        <textarea name="desc" class="ipt" rows="4" placeholder="募集概要"></textarea>
+        <label class="small">画像（1枚）</label>
+        <input type="file" id="imgFile" accept="image/*">
+        <div class="actions"><button class="btn fill">送信（承認待ち）</button></div>
+      </form>
+    </div>
+  </section>
+
+  <!-- ===== 管理（承認） ===== -->
+  <section id="view-admin" class="view">
+    <div class="card">
+      <h2 class="h2">管理（承認）</h2>
+      <div id="adminGuard" class="guard">
+        <input id="pw" class="ipt" type="password" placeholder="パスワード">
+        <button id="pwOk" class="btn fill">ログイン</button>
+      </div>
+      <div id="adminBody" style="display:none">
+        <table class="table" id="adminTable">
+          <thead><tr><th>承認</th><th>求人</th><th>条件</th><th>操作</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== プロフィール ===== -->
+  <section id="view-profile" class="view">
+    <div class="card">
+      <h2 class="h2">プロフィール</h2>
+      <div id="profileBox" class="profile"></div>
+      <p class="small">※ 「参加」ボタンで参加実績が増え、連番IDのレコードをURLへ自動送信します。</p>
+    </div>
+  </section>
+
+  <!-- ===== お問い合わせ ===== -->
+  <section id="view-contact" class="view">
+    <div class="card">
+      <h2 class="h2">お問い合わせ</h2>
+      <form id="contactForm" class="form">
+        <input id="cEmail" class="ipt" type="email" placeholder="あなたのメールアドレス" required>
+        <input id="cSubject" class="ipt" placeholder="件名" required>
+        <textarea id="cBody" class="ipt" rows="6" placeholder="内容" required></textarea>
+        <div class="actions">
+          <button class="btn fill" type="submit">送信</button>
+        </div>
+      </form>
+      <p class="small">※ 宛先は仮の <strong>contact@example.com</strong> です。差し替えてください。</p>
+    </div>
+  </section>
+</main>
+
+<a class="floating-line" href="https://lin.ee/yourCode" target="_blank" rel="noopener">LINE</a>
+
+<!-- ===== 案件 詳細モーダル ===== -->
+<div id="jobModal" class="modal" aria-hidden="true">
+  <div class="modal__dialog" role="dialog" aria-modal="true" aria-labelledby="jobModalTitle">
+    <button class="modal__close" id="jobModalClose" aria-label="閉じる">×</button>
+    <div class="modal__imgWrap"><img id="jobModalImg" alt=""></div>
+    <div class="modal__body">
+      <h3 id="jobModalTitle"></h3>
+      <div id="jobModalMeta" class="modal__meta"></div>
+      <p id="jobModalDesc" class="modal__desc"></p>
+      <div class="modal__actions">
+        <button id="jobModalFav" class="btn">★ お気に入り</button>
+        <button id="jobModalJoin" class="btn fill">参加する</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="./script.js"></script>
+</body>
+</html>
