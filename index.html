@@ -23,7 +23,7 @@
 <!-- ===== ヘッダー ===== -->
 <header class="site-header">
   <div class="container hdr">
-    <a class="brand" href="#"><span class="dot"></span><strong>マジつなぐ</strong></a>
+    <a class="brand" href="#list"><span class="dot"></span><strong>マジつなぐ</strong></a>
 
     <div class="header-right">
       <div class="auth">
@@ -166,7 +166,7 @@
     <div id="pager" class="pager"></div>
   </section>
 
-  <!-- ===== 採用担当者様（投稿） ===== -->
+  <!-- ===== 採用担当者（投稿） ===== -->
   <section id="view-submit" class="view">
     <div class="card">
       <h2 class="h2">採用担当者様向け：求人投稿</h2>
@@ -222,9 +222,55 @@
   <!-- ===== プロフィール ===== -->
   <section id="view-profile" class="view">
     <div class="card">
-      <h2 class="h2">プロフィール</h2>
-      <div id="profileBox" class="profile"></div>
-      <p class="small">※ 「参加」ボタンで参加実績が増え、連番IDのレコードをURLへ自動送信します。</p>
+      <h2 class="h2">アカウント</h2>
+      <div id="accountBanner" class="banner"></div>
+
+      <div class="profile-grid">
+        <div class="box">
+          <div class="box-title">プロフィール（履歴書）</div>
+          <label>名前<input id="pfName" class="ipt"></label>
+          <label>大学/学校名<input id="pfUniv" class="ipt"></label>
+          <div class="grid-2">
+            <label>学年/卒年
+              <select id="pfGrade" class="ipt">
+                <option></option><option>学部1</option><option>学部2</option><option>学部3</option><option>学部4</option>
+                <option>修士1</option><option>修士2</option><option>2026卒</option><option>2027卒</option><option>2028卒</option>
+              </select>
+            </label>
+            <label>専攻<input id="pfMajor" class="ipt" placeholder="情報工学 など"></label>
+          </div>
+          <label>希望職種<input id="pfDesiredRole" class="ipt" placeholder="エンジニア / マーケ など"></label>
+          <label>希望勤務地<input id="pfLocation" class="ipt" placeholder="東京 / 関西 / リモート"></label>
+          <div class="grid-2">
+            <label>時給希望<input id="pfDesiredWage" class="ipt" type="number" placeholder="例: 1500"></label>
+            <label>就業可能日数
+              <select id="pfPossibleDays" class="ipt">
+                <option></option><option>週1〜</option><option>週2〜</option><option>週3〜</option><option>週4〜</option><option>週5〜</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <div class="box">
+          <div class="box-title">スキル / PR</div>
+          <label>スキルタグ（カンマ区切り）<input id="pfSkills" class="ipt" placeholder="Go, React, SQL"></label>
+          <label>SNS / ポートフォリオURL<input id="pfLinks" class="ipt" placeholder="https://..."></label>
+          <label>自己PR<textarea id="pfPR" class="ipt" rows="6" placeholder="強み・経験・関心など"></textarea></label>
+          <label>顔写真（任意）<input type="file" id="pfAvatar" accept="image/*"></label>
+          <div class="avatar-wrap"><img id="pfAvatarPreview" alt="" /></div>
+          <div class="level-wrap">
+            <div>レベル <strong id="pfLevel">1</strong>（参加 <span id="pfJoined">0</span> 回 / 参加企業 合計 <span id="pfJoinedCompanies">0</span>）</div>
+            <div class="level-bar"><span id="pfLevelBar"></span></div>
+          </div>
+          <div class="actions"><button id="pfSave" class="btn fill">保存（更新）</button></div>
+        </div>
+      </div>
+
+      <div class="box">
+        <div class="box-title">あなたの活動記録</div>
+        <ul id="pfHistory" class="small" style="margin:0;padding-left:1rem"></ul>
+        <p class="small">※ データは自動でスプレッドシートに同期します。</p>
+      </div>
     </div>
   </section>
 
@@ -232,17 +278,33 @@
   <section id="view-contact" class="view">
     <div class="card">
       <h2 class="h2">お問い合わせ</h2>
-      <form id="contactForm" class="form">
-        <input id="cEmail" class="ipt" type="email" placeholder="あなたのメールアドレス" required>
-        <input id="cSubject" class="ipt" placeholder="件名" required>
-        <textarea id="cBody" class="ipt" rows="6" placeholder="内容" required></textarea>
-        <div class="actions">
-          <button class="btn fill" type="submit">送信</button>
-        </div>
-      </form>
-      <p class="small">※ 宛先は仮の <strong>contact@example.com</strong> です。差し替えてください。</p>
+      <div class="box">
+        <div class="box-title">内容入力</div>
+        <form id="contactForm" class="form">
+          <div class="grid-2">
+            <label>あなたのメール<input id="cEmail" class="ipt" type="email" placeholder="example@mail.com" required></label>
+            <label>カテゴリ
+              <select id="cCategory" class="ipt">
+                <option>一般</option><option>不具合</option><option>要望</option><option>採用について</option>
+              </select>
+            </label>
+          </div>
+          <label>件名<input id="cSubject" class="ipt" placeholder="件名" required></label>
+          <label>内容<textarea id="cBody" class="ipt" rows="6" placeholder="内容" required></textarea></label>
+          <div class="actions">
+            <button class="btn" type="button" id="contactSaveCSV">CSV保存のみ</button>
+            <button class="btn fill" type="submit">送信（CSV＋メール＋URL）</button>
+          </div>
+        </form>
+        <p class="small">宛先は <strong id="contactToLabel">contact@example.com</strong>（差し替え可）</p>
+      </div>
     </div>
   </section>
+
+  <!-- ダミー：利用規約/プライバシー/会社情報 -->
+  <section id="view-terms" class="view"><div class="card"><h2 class="h2">利用規約</h2><p>ここに規約本文。</p></div></section>
+  <section id="view-privacy" class="view"><div class="card"><h2 class="h2">プライバシー</h2><p>ここにポリシー本文。</p></div></section>
+  <section id="view-about" class="view"><div class="card"><h2 class="h2">会社情報</h2><p>ここに会社情報。</p></div></section>
 </main>
 
 <a class="floating-line" href="https://lin.ee/yourCode" target="_blank" rel="noopener">LINE</a>
@@ -264,6 +326,7 @@
   </div>
 </div>
 
-<script src="./script.js"></script>
+<!-- defer を必ず付ける -->
+<script src="./script.js" defer></script>
 </body>
 </html>
