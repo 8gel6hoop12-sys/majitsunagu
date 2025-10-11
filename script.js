@@ -1,480 +1,228 @@
-/* ===== 設定 ===== */
-const CONTACT_TO = "contact@example.com";
-const ADMIN_PASS = "A7B9C3D1";
-const FAV_KEY    = "majitsunagu-fav";
-const SUBMIT_KEY = "majitsunagu-submits";
-const USERS_KEY  = "majitsunagu-users";
-const SESSION_KEY= "majitsunagu-session";
-const ID_COUNTER = "majitsunagu-id-counter";
+/* ========= 設定 ========= */
+const ADMIN_PASS = "Maji2025";
 
-/* ===== 起動 ===== */
-document.addEventListener('DOMContentLoaded', init);
+/* 訴求（差し替えOK） */
+const HERO_IMG_URL = "";                       // 上段ヒーロー画像
+const HERO_LINK    = "https://example.com";    // ヒーローリンク
+const AD_IMG_URL   = "";                       // 下段広告画像
+const AD_LINK      = "https://example.com/ad"; // 下段広告リンク
 
-function init(){
-  // メニュー
-  (function(){
-    const menuBtn = g('menuBtn'), menu = g('menu');
-    menuBtn?.addEventListener('click', (e)=>{e.preventDefault();e.stopPropagation();menu.classList.toggle('show');});
-    document.addEventListener('click', (e)=>{ if(!menu?.contains(e.target) && e.target!==menuBtn) menu?.classList.remove('show');});
-  })();
+/* ========= DOM util ========= */
+const g = (id)=>document.getElementById(id);
 
-  // ロゴ→ホーム
-  g('brand')?.addEventListener('click', (e)=>{
-    e.preventDefault();
-    location.hash='#list'; handleRoute(); window.scrollTo({top:0,behavior:'smooth'});
-  });
+/* ========= Keys / Storage ========= */
+const FAV_KEY="maj_fav", USERS_KEY="maj_users", SESSION_KEY="maj_session",
+      SUBMIT_KEY="maj_submits", CONTACT_KEY="maj_contacts";
+const load=(k,d)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch{return d}};
+const save=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
 
-  // ルーター
-  setupRouter();
-  if(!location.hash) location.hash = '#list';
-  handleRoute();
+/* ========= Year Chips ========= */
+let activeYear='all'; const years=['all','2026','2027','2028'];
+function renderYearChips(){ g('yearChipsHdr').innerHTML = years.map(y=>`<button type="button" class="year-chip ${y===activeYear?'is-active':''}" data-year="${y}">${y==='all'?'すべて':`${y}卒`}</button>`).join(''); }
+function bindYearChips(){ g('yearChipsHdr').onclick=(e)=>{const b=e.target.closest('[data-year]'); if(!b)return; activeYear=b.dataset.year; renderYearChips(); applyFilters(1);} }
 
-  // 認証UI
-  g('btnSignup')?.addEventListener('click', signupFlow);
-  g('btnLogin') ?.addEventListener('click', loginFlow);
-  g('btnLogout')?.addEventListener('click', ()=>{ setSession(""); alert("ログアウトしました"); });
+/* ========= サンプル求人（ベース） ========= */
+const baseJobs = [
+  {id:1,title:"長期インターン/エンジニア",company:"マジつなぐラボ",year:"2026",wage:1300,open:true,mode:"オンライン",jobType:"エンジニア",dateStart:"2025-11-01",dateEnd:"2025-11-30",place:"リモート",tags:"React,API",img:"",applyUrl:"https://example.com/apply",desc:"React/JSの長期インターン。週2〜OK。"},
+  {id:2,title:"企画/マーケ インターン",company:"MZ Works",year:"2027",wage:1200,open:true,mode:"対面",jobType:"マーケ",dateStart:"2025-10-10",dateEnd:"2025-12-10",place:"東京",tags:"SNS,分析",img:"",applyUrl:"https://example.com/apply2",desc:"SNS運用とレポート。"}
+];
 
-  // 管理
-  g('pwOk')?.addEventListener('click', ()=>{
-    if(g('pw').value!==ADMIN_PASS){alert('パスワードが違います');return;}
-    g('adminBody').style.display=''; renderAdmin();
-  });
-
-  // 投稿
-  g('submitForm')?.addEventListener('submit', onSubmitJob);
-
-  // お問い合わせ
-  g('contactToLabel') && (g('contactToLabel').textContent = CONTACT_TO);
-  g('contactForm')?.addEventListener('submit', onContactSubmit);
-  g('contactSaveCSV')?.addEventListener('click', ()=>alert('CSVを保存しました（ダミー）'));
-
-  // 検索ポップ
-  setupSearchPop();
-
-  // 年チップ（右上 & 互換）
-  renderYearChips();
-
-  // 他タブ同期
-  window.addEventListener('storage', (ev)=>{
-    if(ev.key===SUBMIT_KEY || ev.key===FAV_KEY){
-      window.dispatchEvent(new CustomEvent('jobs-updated'));
-    }
-  });
-  window.addEventListener('jobs-updated', ()=>{
-    if(currentView()==='list') applyFilters(1);
-  });
-
-  // 初期レンダリング
-  applyFilters(1);
-  syncAuthUI();
-}
-
-/* ===== ルーティング ===== */
-function setupRouter(){
-  document.querySelectorAll('[data-view]').forEach(el=>{
-    el.addEventListener('click', (e)=>{
-      const v = el.dataset.view;
-      location.hash = '#'+v;
-      g('menu')?.classList.remove('show');
-      e.preventDefault();
-    });
-  });
-  window.addEventListener('hashchange', handleRoute);
-}
-function handleRoute(){
-  const name=(location.hash||'#list').replace('#','');
-  show(name);
-  if(name==='list'){ applyFilters(1); }
-}
-function show(name){
-  const views=['list','submit','admin','terms','privacy','about','profile','contact'];
-  views.forEach(v=>{
-    const el=g(`view-${v}`); if(el) el.classList.toggle('on', v===name);
-  });
-}
-function currentView(){
-  const v=(location.hash||'#list').replace('#',''); return v||'list';
-}
-
-/* ===== ユーティリティ ===== */
-function g(id){return document.getElementById(id);}
-function nowISO(){return new Date().toISOString();}
-function nextId(){const n=+(localStorage.getItem(ID_COUNTER)||"0")+1; localStorage.setItem(ID_COUNTER,String(n)); return n;}
-function toCSV(rows){return rows.map(r=>r.map(v=>`"${String(v??"").replace(/"/g,'""')}"`).join(",")).join("\r\n");}
-function downloadCSV(filename, rows){
-  const blob=new Blob([toCSV(rows)],{type:"text/csv"});
-  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=filename; a.click(); URL.revokeObjectURL(a.href);
-}
-
-/* ===== データ ===== */
-// ダミー案件は無し。→ 投稿→承認で表示される
-const baseJobs=[];
-
-function loadSubmits(){ return JSON.parse(localStorage.getItem(SUBMIT_KEY)||"[]"); }
-function saveSubmits(a){ localStorage.setItem(SUBMIT_KEY, JSON.stringify(a)); }
-
-/* 承認済みを統合して返す */
+/* ========= 投稿/承認 ========= */
+function loadSubmits(){ return load(SUBMIT_KEY,[]); }
+function saveSubmits(a){ save(SUBMIT_KEY,a); }
 function allJobs(){
-  const extra = loadSubmits().filter(x=>x.approved).map(x=>({
-    id:x.id, title:x.title, company:x.company, year:x.year,
-    wage:+(x.wage||0), open:true,
-    mode:x.mode||'オンライン', jobType:x.jobType||'',
-    dateStart: x.dateStart || x.dateEnd || x.date || '',
-    dateEnd:   x.dateEnd   || x.dateStart || x.date || '',
-    place:x.place||'', tags:x.tags||'', img:x.image||'',
-    applyUrl:x.applyUrl||'', desc:x.desc||''
+  const extra=loadSubmits().filter(x=>x.approved).map(x=>({
+    id:x.id,title:x.title,company:x.company,year:x.year||"2026",wage:+(x.wage||0),open:true,
+    mode:x.mode||'オンライン',jobType:x.jobType||'',place:x.place||'',
+    dateStart:x.dateStart||x.date||'',dateEnd:x.dateEnd||x.date||'',
+    tags:x.tags||'',img:x.image||'',applyUrl:x.applyUrl||'',desc:x.desc||''
   }));
   return baseJobs.concat(extra);
 }
 
-/* ===== 卒年チップ（右上 & 任意の外部領域も対応） ===== */
-let activeYear='all';
-const years=['all','2026','2027','2028'];
-function renderYearChips(){
-  const html = years.map(y =>
-    `<button type="button" class="year-chip ${y===activeYear?'is-active':''}" data-year="${y}">
-      ${y==='all'?'すべて':`${y}卒`}
-     </button>`).join('');
+/* ========= 検索状態 ========= */
+const state={ q:'', jobType:'', modeOnline:false, modeOffline:false, onlyOpen:true, favOnly:false, start:'', end:'', sort:'new', size:6 };
+const favSet=new Set(load(FAV_KEY,[]));
 
-  const hdr = document.getElementById('yearChipsHdr');
-  const out = document.getElementById('yearChips'); // 互換（存在しなくてもOK）
-
-  const bind = (wrap)=>{
-    if(!wrap) return;
-    wrap.innerHTML = html;
-    wrap.onclick = (e)=>{
-      const b=e.target.closest('[data-year]'); if(!b) return;
-      activeYear=b.dataset.year; renderYearChips(); applyFilters(1);
-    };
-  };
-  bind(hdr); bind(out);
-}
-
-/* ===== 検索ポップ ===== */
+/* ========= 検索ポップ ========= */
+function openSearchPop(){ const p=g('searchPop'); p.classList.add('show'); p.setAttribute('aria-hidden','false'); }
+function closeSearchPop(){ const p=g('searchPop'); p.classList.remove('show'); p.setAttribute('aria-hidden','true'); }
 function setupSearchPop(){
-  const pop=g('searchPop'), close=g('spClose'), form=g('searchForm');
-  const open=()=>{ pop.classList.add('show'); pop.setAttribute('aria-hidden','false'); };
-  const hide=()=>{ pop.classList.remove('show'); pop.setAttribute('aria-hidden','true'); };
-
-  // ヘッダーの「検索」ボタン
-  g('openSearch')?.addEventListener('click', open);
-
-  // 四角い検索ランチャー
-  const launch = g('searchLaunch');
-  if(launch){
-    const openLaunch = ()=> open();
-    launch.addEventListener('click', openLaunch);
-    launch.addEventListener('keydown', (e)=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); openLaunch(); }});
-  }
-
-  close?.addEventListener('click', hide);
-  pop?.addEventListener('click', (e)=>{ if(e.target===pop) hide(); });
-
-  // クリア
-  g('spClear')?.addEventListener('click', ()=>{
-    g('sp_q').value='';
-    g('sp_jobType').value='';
-    g('sp_modeOnline').checked=false;
-    g('sp_modeOffline').checked=false;
-    g('sp_onlyOpen').checked=true;
-    g('sp_favOnly').checked=false;
-    g('sp_start').value=''; g('sp_end').value='';
-  });
-
-  // 送信→絞り込み反映
-  form?.addEventListener('submit', (e)=>{
+  g('openSearch').onclick=openSearchPop;
+  g('searchLaunch').onclick=openSearchPop;
+  g('spClose').onclick=closeSearchPop;
+  g('searchPop').addEventListener('click',e=>{ if(e.target.id==='searchPop') closeSearchPop(); });
+  g('spClear').onclick=()=>{ g('sp_q').value=''; g('sp_jobType').value=''; g('sp_modeOnline').checked=false; g('sp_modeOffline').checked=false; g('sp_onlyOpen').checked=true; g('sp_favOnly').checked=false; g('sp_start').value=''; g('sp_end').value=''; g('sp_sort').value='new'; g('sp_pageSize').value='6'; };
+  g('searchForm').onsubmit=(e)=>{
     e.preventDefault();
-    // 値をフィルタ状態に写し込む
-    state.q = g('sp_q').value.trim();
-    state.jobType = g('sp_jobType').value;
-    state.modeOnline = g('sp_modeOnline').checked;
-    state.modeOffline = g('sp_modeOffline').checked;
-    state.onlyOpen = g('sp_onlyOpen').checked;
-    state.favOnly = g('sp_favOnly').checked;
-    state.start = g('sp_start').value;
-    state.end   = g('sp_end').value;
-
-    hide();
+    state.q=g('sp_q').value.trim();
+    state.jobType=g('sp_jobType').value;
+    state.modeOnline=g('sp_modeOnline').checked;
+    state.modeOffline=g('sp_modeOffline').checked;
+    state.onlyOpen=g('sp_onlyOpen').checked;
+    state.favOnly=g('sp_favOnly').checked;
+    state.start=g('sp_start').value;
+    state.end=g('sp_end').value;
+    state.sort=g('sp_sort').value;
+    state.size=+(g('sp_pageSize').value||6);
+    closeSearchPop();
     applyFilters(1);
-    // 一覧へ移動
-    location.hash='#list'; show('list');
-  });
+  };
 }
 
-/* ===== フィルタ状態 ===== */
-const favSet=new Set(JSON.parse(localStorage.getItem(FAV_KEY)||'[]'));
-const state = {
-  q:'', jobType:'', modeOnline:false, modeOffline:false, onlyOpen:true, favOnly:false,
-  start:'', end:'', sort:'new', pageSize:10
-};
-function overlaps(js, je){
-  const s = state.start || '';
-  const e = state.end   || '';
-  if(!s && !e) return true;
-  const S = s || '0000-01-01';
-  const E = e || '9999-12-31';
-  const J1= js || ''; const J2= je || js || '';
-  return (S<=J2) && (E>=J1);
-}
-
-/* ===== 描画 ===== */
-const cards=g('cards'), count=g('count'), pager=g('pager'), chips=g('activeChips');
-let page=1;
-
-function chipRender(){
-  const a=[];
-  if(activeYear!=='all') a.push(`${activeYear}卒`);
-  if(state.q) a.push(`KW:${state.q}`);
-  if(state.jobType) a.push(state.jobType);
-  if(state.modeOnline) a.push('オンライン');
-  if(state.modeOffline) a.push('対面');
-  if(state.favOnly) a.push('★お気に入り');
-  if(state.onlyOpen) a.push('募集中のみ');
-  if(state.start||state.end) a.push(`${state.start||'...'}〜${state.end||'...'}`);
-  chips.innerHTML = a.map(s=>`<span class="chip">${s}</span>`).join('');
-}
-
+/* ========= フィルタ（開催期間：1日でも重なればヒット） ========= */
+const cards=g('cards'), count=g('count'), pager=g('pager'), chips=g('activeChips'); let page=1;
+function overlaps(js,je){ const S=state.start||'0000-01-01', E=state.end||'9999-12-31'; if(!state.start && !state.end) return true; const J1=js||'', J2=je||js||''; return (S<=J2)&&(E>=J1); }
+function chipRender(){ const a=[]; if(activeYear!=='all')a.push(`${activeYear}卒`); if(state.q)a.push(`KW:${state.q}`); if(state.jobType)a.push(state.jobType); if(state.modeOnline)a.push('オンライン'); if(state.modeOffline)a.push('対面'); if(state.favOnly)a.push('★お気に入り'); if(state.onlyOpen)a.push('募集中のみ'); if(state.start||state.end)a.push(`開催期間:${state.start||'...'}〜${state.end||'...'}`); chips.innerHTML=a.map(s=>`<span class="chip">${s}</span>`).join(''); }
 function cardHTML(item){
-  const noImg=!item.img, favOn=favSet.has(item.id)?'is-on':'';
-  const dateLabel = item.dateStart ? (item.dateEnd && item.dateEnd!==item.dateStart ? `${item.dateStart}〜${item.dateEnd}` : item.dateStart) : '';
-  return `
-  <article class="card-item" data-id="${item.id}">
+  const noImg=!item.img, favOn=favSet.has(item.id)?'is-on':''; 
+  const dateLabel=item.dateStart?(item.dateEnd&&item.dateEnd!==item.dateStart?`${item.dateStart}〜${item.dateEnd}`:item.dateStart):'';
+  return `<article class="card-item" data-id="${item.id}">
     <figure class="card-photo ${noImg?'noimg':''}">
       ${item.img?`<img src="${item.img}" alt="">`:''}
       <figcaption class="overlay">
         <div style="font-weight:800;margin:0 0 4px">${item.title}</div>
-        <div class="meta">
-          <span class="badge">${item.company}</span>
-          <span class="badge">${item.year}卒</span>
-          <span class="badge">${item.jobType||'-'}</span>
-          <span class="badge">${item.mode||'-'}</span>
-          <span class="badge">${item.place||'-'}</span>
-          <span class="badge">${dateLabel}</span>
-        </div>
+        <div class="meta"><span class="badge">${item.company}</span><span class="badge">${item.year}卒</span><span class="badge">${item.jobType||'-'}</span><span class="badge">${item.mode||'-'}</span><span class="badge">${item.place||'-'}</span><span class="badge">${dateLabel}</span></div>
         <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn ${favOn}" data-fav="${item.id}">★ お気に入り</button>
-          <button class="btn fill" data-join="${item.id}" data-company="${item.company}">参加</button>
+          <a class="btn fill" data-join="${item.id}" href="${item.applyUrl||'#'}" target="_blank" rel="noopener">参加</a>
         </div>
       </figcaption>
     </figure>
   </article>`;
 }
-
 function render(list){
-  if(!list.length){
-    cards.innerHTML = `<div class="card"><strong>投稿・承認された求人が表示されます。</strong><div class="small">「採用担当者様（投稿）」から追加 → 「管理（承認）」で公開してください。</div></div>`;
-  }else{
-    cards.innerHTML = list.map(cardHTML).join('');
-  }
-  // イベント
-  cards.querySelectorAll('[data-fav]').forEach(b=>b.onclick=e=>{
-    e.stopPropagation();
-    const id=+b.dataset.fav;
-    if(favSet.has(id)) favSet.delete(id); else favSet.add(id);
-    localStorage.setItem(FAV_KEY, JSON.stringify([...favSet]));
-    applyFilters(page);
-  });
-  cards.querySelectorAll('[data-join]').forEach(b=>b.onclick=e=>{
-    e.stopPropagation();
-    const id=+b.dataset.join; const job=allJobs().find(j=>j.id===id); if(!job) return;
-    addParticipation(currentUserEmail(), job.company);
-    if(job.applyUrl) window.open(job.applyUrl,'_blank');
-  });
-  cards.querySelectorAll('.card-item').forEach(card=>{
-    card.onclick=()=>{
-      const id=+card.dataset.id; const job=allJobs().find(j=>j.id===id); if(job) openJobModal(job);
-    };
-  });
+  cards.innerHTML=list.length?list.map(cardHTML).join(''):`<div class="card"><strong>投稿・承認された求人が表示されます。</strong></div>`;
+  cards.querySelectorAll('[data-fav]').forEach(b=>b.onclick=e=>{e.preventDefault();e.stopPropagation();const id=+b.dataset.fav;if(favSet.has(id))favSet.delete(id);else favSet.add(id);save(FAV_KEY,[...favSet]);applyFilters(page);});
+  cards.querySelectorAll('.card-item').forEach(card=>card.onclick=()=>{const id=+card.dataset.id;const job=allJobs().find(j=>j.id===id);if(job)openJobModal(job);});
 }
-
-function renderPager(pages){
-  if(pages<=1){ pager.innerHTML=''; return; }
-  let html=''; for(let i=1;i<=pages;i++) html+=`<button class="${i===page?'is-active':''}" data-page="${i}">${i}</button>`;
-  pager.innerHTML=html;
-  pager.querySelectorAll('button').forEach(b=>b.onclick=()=>applyFilters(+b.dataset.page));
-}
-
+function renderPager(pages){ if(pages<=1){pager.innerHTML='';return;} let html='';for(let i=1;i<=pages;i++) html+=`<button class="${i===page?'is-active':''}" data-page="${i}">${i}</button>`; pager.innerHTML=html; pager.querySelectorAll('button').forEach(b=>b.onclick=()=>applyFilters(+b.dataset.page)); }
 function applyFilters(goPage=page){
   page=goPage;
-  let list = allJobs().filter(j=>{
-    const text = `${j.title} ${j.company} ${j.tags}`.toLowerCase();
-    const kw   = !state.q || text.includes(state.q.toLowerCase());
-    const yr   = (activeYear==='all') ? true : j.year===activeYear;
-    const jt   = !state.jobType || j.jobType===state.jobType;
-
-    const modeOK = (!state.modeOnline && !state.modeOffline) ||
-                   (state.modeOnline  && /オンライン|ﾊｲﾌﾞﾘｯﾄﾞ|ハイブリッド/.test(j.mode)) ||
-                   (state.modeOffline && /オフライン|対面|ﾊｲﾌﾞﾘｯﾄﾞ|ハイブリッド/.test(j.mode));
-
-    const openOK = !state.onlyOpen || j.open;
-    const favOK  = !state.favOnly  || favSet.has(j.id);
-    const rangeOK= overlaps(j.dateStart, j.dateEnd);
-
-    return kw && yr && jt && modeOK && openOK && favOK && rangeOK;
+  let list=allJobs().filter(j=>{
+    const text=`${j.title} ${j.company} ${j.tags}`.toLowerCase();
+    const kw=!state.q||text.includes(state.q.toLowerCase());
+    const yr=(activeYear==='all')?true:j.year===activeYear;
+    const jt=!state.jobType||j.jobType===state.jobType;
+    const modeOK=(!state.modeOnline&&!state.modeOffline) || (state.modeOnline&&/オンライン|ﾊｲﾌﾞﾘｯﾄﾞ|ハイブリッド/.test(j.mode)) || (state.modeOffline&&/対面|オフライン|ﾊｲﾌﾞﾘｯﾄﾞ|ハイブリッド/.test(j.mode));
+    const openOK=!state.onlyOpen||j.open; const favOK=!state.favOnly||favSet.has(j.id); const rangeOK=overlaps(j.dateStart,j.dateEnd);
+    return kw&&yr&&jt&&modeOK&&openOK&&favOK&&rangeOK;
   });
-
-  // 並び替え
-  list.sort((a,b)=>{
-    const map = {
-      new:      (b.dateStart||'').localeCompare(a.dateStart||''),
-      old:      (a.dateStart||'').localeCompare(b.dateStart||''),
-      wageDesc: (b.wage||0)-(a.wage||0),
-      wageAsc:  (a.wage||0)-(b.wage||0),
-    };
-    return map[state.sort] ?? 0;
-  });
-
-  // ページング
-  count.textContent=String(list.length);
-  chipRender();
-  const size=+(state.pageSize||10);
-  const pages=Math.max(1, Math.ceil(list.length/size));
-  if(page>pages) page=pages;
-
-  render(list.slice((page-1)*size, page*size));
-  renderPager(pages);
+  list.sort((a,b)=>({new:(b.dateStart||'').localeCompare(a.dateStart||''),old:(a.dateStart||'').localeCompare(b.dateStart||''),wageDesc:(b.wage||0)-(a.wage||0),wageAsc:(a.wage||0)-(b.wage||0)})[state.sort]||0);
+  count.textContent=String(list.length); chipRender();
+  const size=+(state.size||6); const pages=Math.max(1,Math.ceil(list.length/size)); if(page>pages) page=pages;
+  render(list.slice((page-1)*size, page*size)); renderPager(pages);
 }
 
-/* ===== 投稿 ===== */
-async function onSubmitJob(e){
-  e.preventDefault();
-  const f=new FormData(e.currentTarget);
-  const file=g('imgFile').files[0];
-  const image=file?await readAsDataURL(file):"";
-  const arr=loadSubmits();
+/* ========= 求人詳細 ========= */
+const jobModal={ wrap:g('jobModal'), close:g('jobModalClose'), img:g('jobModalImg'), title:g('jobModalTitle'), meta:g('jobModalMeta'), desc:g('jobModalDesc'), fav:g('jobModalFav'), join:g('jobModalJoin') };
+function openJobModal(job){ jobModal.img.src=job.img||''; jobModal.img.style.display=job.img?'':'none'; const dateLabel=job.dateStart?(job.dateEnd&&job.dateEnd!==job.dateStart?`${job.dateStart}〜${job.dateEnd}`:job.dateStart):''; jobModal.title.textContent=`${job.title} / ${job.company}`; jobModal.meta.innerHTML=`<span class="badge">${job.year}卒</span><span class="badge">${job.jobType||'-'}</span><span class="badge">${job.mode||'-'}</span><span class="badge">${job.place||'-'}</span><span class="badge">${dateLabel}</span>`; jobModal.desc.textContent=(job.desc||job.tags||'').toString(); jobModal.join.href=job.applyUrl||'#'; jobModal.fav.onclick=()=>{const id=allJobs().find(j=>j.title===job.title&&j.company===job.company).id; if(favSet.has(id))favSet.delete(id);else favSet.add(id); save(FAV_KEY,[...favSet]); applyFilters(page);}; jobModal.wrap.classList.add('show'); jobModal.wrap.setAttribute('aria-hidden','false'); }
+jobModal.close.onclick=()=>{ jobModal.wrap.classList.remove('show'); jobModal.wrap.setAttribute('aria-hidden','true'); };
+jobModal.wrap.addEventListener('click',e=>{ if(e.target===jobModal.wrap) jobModal.close.click(); });
 
-  const dateStart=f.get('dateStart')||f.get('dateEnd')||'';
-  const dateEnd  =f.get('dateEnd')  ||f.get('dateStart')||'';
+/* ========= 認証 / ユーザー ========= */
+function users(){ return load(USERS_KEY,[]); }
+function saveUsers(U){ save(USERS_KEY,U); refreshCSVs(); }
+function sessionEmail(){ return (load(SESSION_KEY,null)||{}).email||""; }
+function setSession(email){ if(email){save(SESSION_KEY,{email});} else {localStorage.removeItem(SESSION_KEY);} syncAuthUI(); }
+function syncAuthUI(){ const email=sessionEmail(), logged=!!email; g('btnLogin').hidden=g('btnSignup').hidden=logged; g('btnLogout').hidden=!logged; const who=g('who'); if(who){who.hidden=!logged; who.textContent=logged?email:"";} }
 
-  arr.push({
-    id:Date.now(),
-    title:f.get('title'), company:f.get('company'), year:f.get('year')||'',
-    wage:f.get('wage')||0, jobType:f.get('jobType')||'', mode:f.get('mode')||'',
-    place:f.get('place')||'', tags:f.get('tags')||'', desc:f.get('desc')||'',
-    dateStart, dateEnd, image, approved:false, applyUrl:f.get('applyUrl')||''
-  });
-  saveSubmits(arr);
-  window.dispatchEvent(new CustomEvent('jobs-updated'));
-  alert('送信しました（承認待ち）。管理から承認してください。');
-  e.currentTarget.reset();
-  location.hash='#admin'; handleRoute();
-}
-function readAsDataURL(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(file);});}
+g('btnSignup').onclick=()=>{ openFull('authModal'); };
+g('btnLogin').onclick =()=>{ openFull('authModal'); };
+g('btnLogout').onclick=()=>{ setSession(""); alert('ログアウトしました'); };
 
-/* ===== 管理 ===== */
-function renderAdmin(){
-  const tbody=document.querySelector('#adminTable tbody'); tbody.innerHTML='';
-  const arr=loadSubmits().sort((a,b)=>String(a.dateStart||'').localeCompare(b.dateStart||''));
-  arr.forEach(ev=>{
-    const range = ev.dateStart ? (ev.dateEnd && ev.dateEnd!==ev.dateStart ? `${ev.dateStart}〜${ev.dateEnd}` : ev.dateStart) : '';
-    const tr=document.createElement('tr');
-    tr.innerHTML = `
-      <td><input type="checkbox" data-act="approve" data-id="${ev.id}" ${ev.approved?'checked':''}></td>
-      <td><strong>${ev.title}</strong><div class="small">${ev.company} / ${ev.year}卒</div></td>
-      <td>${ev.jobType||'-'} / ${ev.mode||'-'} / ${ev.place||'-'} / ${range}</td>
-      <td><button class="btn" data-act="delete" data-id="${ev.id}">削除</button></td>
-    `;
-    tbody.appendChild(tr);
-  });
-  tbody.onclick=(e)=>{
-    const a=e.target.closest('[data-act]'); if(!a) return;
-    const list=loadSubmits(); const id=+a.dataset.id; const item=list.find(x=>x.id===id);
-    if(a.dataset.act==='approve'&&item){
-      item.approved=e.target.checked; saveSubmits(list);
-      window.dispatchEvent(new CustomEvent('jobs-updated'));
-      return;
-    }
-    if(a.dataset.act==='delete'){
-      const next=list.filter(x=>x.id!==id); saveSubmits(next);
-      window.dispatchEvent(new CustomEvent('jobs-updated'));
-      renderAdmin();
-    }
+g('doSignup').onclick =()=>{ const name=g('sgName').value.trim(), univ=g('sgUniv').value.trim(), email=g('sgEmail').value.trim(), pass=g('sgPass').value.trim(); if(!name||!univ||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)||pass.length<8){g('authHint').textContent='入力を確認してください';return;} const U=users(); if(U.find(u=>u.email===email)){g('authHint').textContent='このメールは登録済みです';return;} const u={email,pass,profile:{name,univ,grade:"2026",role:"",links:"",pr:""},joined:[]}; U.push(u); saveUsers(U); setSession(email); fillProfile(); alert('登録しました。プロフィールも保存しました'); closeFull('authModal'); };
+
+g('doLogin').onclick  =()=>{ const email=g('authEmail').value.trim(), pass=g('authPass').value.trim(); const u=users().find(x=>x.email===email&&x.pass===pass); g('authHint').textContent=u?'':'メール/パスワードが違います'; if(u){ setSession(email); closeFull('authModal'); alert('ログインしました'); } };
+g('authClose').onclick=()=>closeFull('authModal');
+g('openForgot').onclick=()=>{ closeFull('authModal'); openFull('forgotModal'); };
+
+/* パスワード再設定 */
+let fgTargetEmail="";
+g('doVerify').onclick=()=>{ const name=g('fgName').value.trim(), univ=g('fgUniv').value.trim(), email=g('fgEmail').value.trim(); const u=users().find(x=>x.email===email && (x.profile?.name||"")===name && (x.profile?.univ||"")===univ); if(!u){ g('fgHint').textContent="一致するユーザーが見つかりません"; return; } fgTargetEmail=email; g('verifyBox').style.display='none'; g('resetBox').style.display='grid'; g('fgHint').textContent='本人確認OK。新しいパスワードを設定してください。'; };
+g('doReset').onclick=()=>{ const pw=g('fgNewPass').value.trim(); if(pw.length<8){ g('fgHint').textContent='8文字以上で入力してください'; return; } const U=users(); const u=U.find(x=>x.email===fgTargetEmail); if(!u){ g('fgHint').textContent='エラーが発生しました'; return; } u.pass=pw; saveUsers(U); alert('再設定しました。ログインしてください。'); closeFull('forgotModal'); openFull('authModal'); };
+
+/* 参加実績（お気に入りとは別カウント） */
+function addParticipation(email,company){ if(!email)return; const U=users(); const u=U.find(x=>x.email===email); if(!u)return; u.joined.push(company); saveUsers(U); }
+
+/* プロフィール */
+function fillProfile(){ const email=sessionEmail(); if(!email) return; const u=users().find(x=>x.email===email); if(!u) return; g('pfName').value=u.profile?.name||''; g('pfUniv').value=u.profile?.univ||''; g('pfGrade').value=u.profile?.grade||'2026'; g('pfRole').value=u.profile?.role||''; g('pfLinks').value=u.profile?.links||''; g('pfPR').value=u.profile?.pr||''; }
+g('pfSave').onclick=()=>{ const email=sessionEmail(); if(!email){alert('先にログインしてください');return;} const U=users(); const u=U.find(x=>x.email===email); if(!u)return; u.profile={ name:g('pfName').value.trim(), univ:g('pfUniv').value.trim(), grade:g('pfGrade').value, role:g('pfRole').value.trim(), links:g('pfLinks').value.trim(), pr:g('pfPR').value.trim() }; saveUsers(U); alert('保存しました'); closeFull('profileModal'); };
+
+/* ========= お問い合わせ ========= */
+function contacts(){ return load(CONTACT_KEY,[]); }
+function addContact(rec){ const arr=contacts(); arr.push({...rec, id:arr.length?Math.max(...arr.map(x=>x.id))+1:1, created:new Date().toISOString()}); save(CONTACT_KEY,arr); refreshCSVs(); }
+g('mtSend').onclick=()=>{ if(!g('mtAgree').checked){alert('プライバシーポリシーに同意が必要です');return;} const rec={ company:g('mtCompany').value.trim(), person:g('mtPerson').value.trim(), phone:g('mtPhone').value.trim(), email:g('mtEmail').value.trim(), body:g('mtBody').value.trim() }; if(!rec.email||!rec.person){alert('担当者名/メールは必須です');return;} addContact(rec); alert('送信しました（CSVに追記）'); closeFull('materialsModal'); };
+
+/* ========= 管理（投稿/承認/CSV） ========= */
+g('enterAdmin').onclick=()=>{ if(g('adminPass').value===ADMIN_PASS){ g('adminGate').style.display='none'; g('adminBody').style.display='block'; renderAdmin(); } else alert('パスワードが違います'); };
+g('submitJob').onclick = () => {
+  const item = {
+    id: Date.now(),
+    company: g('sCompany').value.trim(),
+    title: g('sTitle').value.trim(),
+    jobType: g('sJobType').value,
+    mode: g('sMode').value,
+    place: g('sPlace').value.trim(),
+    dateStart: g('sDateStart').value,         // ← ここを : に修正
+    dateEnd: g('sDateEnd').value || g('sDateStart').value,
+    wage: g('sWage').value,
+    week: g('sWeek').value,
+    tags: g('sTags').value.trim(),
+    desc: g('sDesc').value.trim(),
+    applyUrl: g('sApply').value.trim(),
+    image: g('sImage').value.trim(),
+    year: '2026',
+    approved: false
   };
-}
 
-/* ===== 認証（簡易） ===== */
-function users(){ return JSON.parse(localStorage.getItem(USERS_KEY)||"[]"); }
-function saveUsers(U){ localStorage.setItem(USERS_KEY, JSON.stringify(U)); }
-function currentUserEmail(){ return localStorage.getItem(SESSION_KEY)||""; }
-function setSession(email){ if(email){localStorage.setItem(SESSION_KEY,email);} else{localStorage.removeItem(SESSION_KEY);} syncAuthUI(); }
-function syncAuthUI(){
-  const email=currentUserEmail(), logged=!!email;
-  g('btnLogin').hidden=g('btnSignup').hidden=logged;
-  g('btnLogout').hidden=!logged;
-  const who=g('who');
-  if(who){ who.hidden=!logged; who.textContent=logged?email:""; }
-  const banner=g('accountBanner');
-  if(banner) banner.textContent=logged?`ログイン中: ${email}`:`未ログイン（ゲスト）`;
-}
-function blankUser(email, uid){
-  return { uid, email, pw:"", name:"", university:"", grade:"", major:"", desiredRole:"", location:"", desiredWage:"", possibleDays:"", skills:"", links:"", pr:"", avatar:"", joined:0, joinedCompaniesCount:0, history:[], createdAt:nowISO(), updatedAt:nowISO() };
-}
-function signupFlow(){
-  const email=prompt("メールアドレス"); if(!email) return;
-  const pw=prompt("パスワード（8文字以上推奨）"); if(!pw) return;
-  const U=users(); if(U.some(u=>u.email===email)){ alert("既に登録済みです（ログインしてください）"); return; }
-  const uid=nextId(); const u=blankUser(email, uid); u.pw=pw;
-  U.push(u); saveUsers(U); setSession(email); alert("登録完了。プロフィールを入力してください。"); location.hash='#profile';
-}
-function loginFlow(){
-  const email=prompt("メールアドレス"); if(!email) return;
-  const pw=prompt("パスワード"); if(!pw) return;
-  const U=users(); let u=U.find(x=>x.email===email && x.pw===pw);
-  if(!u){ alert("メールまたはパスワードが違います"); return; }
-  if(!u.uid){ u.uid=nextId(); u.updatedAt=nowISO(); saveUsers(U); }
-  setSession(email); alert("ログインしました"); location.hash='#profile';
-}
+  const arr = loadSubmits();
+  arr.push(item);
+  saveSubmits(arr);
+  renderAdmin();
+  alert('投稿しました。承認で公開されます。');
+};
+function renderAdmin(){ const arr=loadSubmits(); const wrap=g('adminList'); wrap.innerHTML = arr.length? arr.map(x=>`<label class="admin-item"><input type="checkbox" data-id="${x.id}" ${x.approved?'checked':''}/> <span><strong>${x.title}</strong> / ${x.company} <span class="small" style="color:#6b7280">(${x.dateStart}〜${x.dateEnd} / ${x.mode} / ${x.jobType})</span></span></label>`).join('') : '<div class="small" style="color:#6b7280">投稿はまだありません</div>'; wrap.querySelectorAll('input[type="checkbox"]').forEach(ch=>ch.onchange=()=>{ const id=+ch.dataset.id; const list=loadSubmits(); const row=list.find(r=>r.id===id); if(row){row.approved=ch.checked; saveSubmits(list); applyFilters();} }); refreshCSVs(); }
+/* CSVリンク */
+function refreshCSVs(){ const u=users(); const uCsv=[["email","name","univ","grade","role","links","pr","joined_count","joined_list"], ...u.map(x=>[x.email,x.profile?.name||"",x.profile?.univ||"",x.profile?.grade||"",x.profile?.role||"",x.profile?.links||"", (x.profile?.pr||"").replace(/\n/g," "), x.joined.length, x.joined.join("|") ])].map(r=>r.map(v=>`"${String(v??"").replace(/"/g,'""')}"`).join(",")).join("\r\n"); g('csvUsers').href=URL.createObjectURL(new Blob([uCsv],{type:"text/csv"}));
+  const c=contacts(); const cCsv=[["id","company","person","phone","email","body","created"], ...c.map(x=>[x.id,x.company,x.person,x.phone,x.email,(x.body||"").replace(/\n/g," "),x.created])].map(r=>r.map(v=>`"${String(v??"").replace(/"/g,'""')}"`).join(",")).join("\r\n"); g('csvContacts').href=URL.createObjectURL(new Blob([cCsv],{type:"text/csv"})); }
 
-/* 参加 */
-function addParticipation(email, companyName){
-  if(!email){ alert("ログインしてください"); return; }
-  const U=users(); const u=U.find(x=>x.email===email); if(!u) return;
-  u.joined=(u.joined||0)+1; u.joinedCompaniesCount=(u.joinedCompaniesCount||0)+1;
-  const at=nowISO(); u.history=u.history||[]; u.history.push({company:companyName||"",at}); u.updatedAt=at; saveUsers(U);
-}
+/* ========= メニュー（全画面） ========= */
+const menu=g('menu'), menuBtn=g('menuBtn');
+menuBtn.onclick=()=>menu.classList.toggle('show');
+document.addEventListener('click',(e)=>{ if(!menu.contains(e.target) && e.target!==menuBtn) menu.classList.remove('show'); });
 
-/* ===== お問い合わせ（簡易） ===== */
-function onContactSubmit(e){
-  e.preventDefault();
-  alert("お問い合わせを送信しました（ダミー）。メール送信は実装先に合わせてください。");
-  e.currentTarget.reset();
-}
+menu.onclick=(e)=>{
+  const v=e.target.getAttribute('data-open'); if(!v) return;
+  menu.classList.remove('show');
+  if(v==='home'){ homeReset(); return; }
+  if(v==='profile'){ fillProfile(); openFull('profileModal'); return; }
+  if(v==='materials'){ openFull('materialsModal'); return; }
+  if(v==='admin'){ openFull('adminModal'); return; }
+  if(v==='terms'){ openFull('termsModal'); return; }
+  if(v==='privacy'){ openFull('privacyModal'); return; }
+  if(v==='about'){ openFull('aboutModal'); return; }
+};
 
-/* ===== 求人モーダル ===== */
-const modalHTML = (()=>`
-<div id="jobModal" class="modal" aria-hidden="true">
-  <div class="modal__dialog" role="dialog" aria-modal="true" aria-labelledby="jobModalTitle">
-    <button class="modal__close" id="jobModalClose" aria-label="閉じる">×</button>
-    <div class="modal__body" style="padding:0">
-      <div class="modal__imgWrap"><img id="jobModalImg" alt=""></div>
-      <div class="modal__body" style="padding:16px">
-        <h3 id="jobModalTitle"></h3>
-        <div id="jobModalMeta" class="meta" style="margin:.5rem 0"></div>
-        <p id="jobModalDesc" class="small"></p>
-        <div class="actions">
-          <button id="jobModalFav" class="btn">★ お気に入り</button>
-          <button id="jobModalJoin" class="btn fill">参加する</button>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-`)();
-document.body.insertAdjacentHTML('beforeend', modalHTML);
-const modal=g('jobModal'), mClose=g('jobModalClose'), mImg=g('jobModalImg'), mTitle=g('jobModalTitle'), mMeta=g('jobModalMeta'), mDesc=g('jobModalDesc'), mFav=g('jobModalFav'), mJoin=g('jobModalJoin');
-let currentJob=null;
+/* 全画面の開閉（開いてる間は一覧/検索UIを隠す＆ホーム色帯） */
+function openFull(id){ document.body.classList.add('full-open'); const m=g(id); m.classList.add('show'); m.setAttribute('aria-hidden','false'); }
+function closeFull(id){ const m=g(id); m.classList.remove('show'); m.setAttribute('aria-hidden','true'); if(document.querySelectorAll('.modal.modal--full.show').length===0){ document.body.classList.remove('full-open'); } }
+document.querySelectorAll('[data-fullhome]').forEach(b=>b.onclick=()=>homeReset());
+document.querySelectorAll('.modal__close,[data-close]').forEach(b=>b.addEventListener('click',()=>{ const m=b.closest('.modal'); if(m.classList.contains('modal--full')) closeFull(m.id); else { m.classList.remove('show'); m.setAttribute('aria-hidden','true'); } }));
+document.querySelectorAll('.modal.modal--full').forEach(m=>m.addEventListener('click',e=>{ if(e.target.classList.contains('modal')) closeFull(m.id); }));
 
-function openJobModal(job){
-  currentJob=job;
-  mImg.src=job.img||''; mImg.style.display=job.img?'':'none';
-  const dateLabel = job.dateStart ? (job.dateEnd && job.dateEnd!==job.dateStart ? `${job.dateStart}〜${job.dateEnd}` : job.dateStart) : '';
-  mTitle.textContent=job.title;
-  mMeta.innerHTML=`<span class="badge">${job.company}</span><span class="badge">${job.year}卒</span><span class="badge">${job.jobType||'-'}</span><span class="badge">${job.mode||'-'}</span><span class="badge">${job.place||'-'}</span><span class="badge">${dateLabel}</span>`;
-  mDesc.textContent=(job.desc||job.tags||'').toString();
-  mFav.classList.toggle('is-on', favSet.has(job.id));
-  modal.classList.add('show'); modal.setAttribute('aria-hidden','false');
-}
-function closeJobModal(){ modal.classList.remove('show'); modal.setAttribute('aria-hidden','true'); currentJob=null; }
-mClose.onclick=closeJobModal; modal.addEventListener('click',e=>{if(e.target===modal) closeJobModal();});
-mFav.onclick=()=>{ if(!currentJob) return; if(favSet.has(currentJob.id)) favSet.delete(currentJob.id); else favSet.add(currentJob.id); localStorage.setItem(FAV_KEY,JSON.stringify([...favSet])); mFav.classList.toggle('is-on', favSet.has(currentJob.id)); applyFilters(page); };
-mJoin.onclick=()=>{ if(!currentJob) return; addParticipation(currentUserEmail(), currentJob.company); if(currentJob.applyUrl) window.open(currentJob.applyUrl,'_blank'); closeJobModal(); };
+function homeReset(){ activeYear='all'; renderYearChips(); Object.assign(state,{ q:'', jobType:'', modeOnline:false, modeOffline:false, onlyOpen:true, favOnly:false, start:'', end:'', sort:'new', size:6 }); document.body.classList.remove('full-open'); document.querySelectorAll('.modal.modal--full').forEach(x=>{x.classList.remove('show'); x.setAttribute('aria-hidden','true');}); applyFilters(1); window.scrollTo({top:0,behavior:'smooth'}); }
+
+/* ========= ヒーロー/広告の差し替え適用 ========= */
+(function(){
+  const hero=g('heroLink'); if(HERO_IMG_URL){ hero.style.backgroundImage=`url('${HERO_IMG_URL}')`; } hero.href=HERO_LINK||'#';
+  const ad=g('adImg'); if(AD_IMG_URL){ ad.style.backgroundImage=`url('${AD_IMG_URL}')`; ad.style.backgroundSize='cover'; ad.style.backgroundPosition='center'; }
+  const adL=g('adLink'); adL.href=AD_LINK||'#';
+})();
+
+/* ========= ロゴ → ホーム ========= */
+g('brand').onclick=homeReset;
+
+/* ========= 初期化 ========= */
+function init(){ renderYearChips(); bindYearChips(); setupSearchPop(); syncAuthUI(); applyFilters(1); refreshCSVs(); }
+document.addEventListener('DOMContentLoaded', init);
