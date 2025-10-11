@@ -8,24 +8,19 @@
 </head>
 <body>
 
-<!-- ===== 起動POP ===== -->
-<div id="pop" class="pop">
-  <div class="pop-inner">
-    <h1>長期インターン 新着</h1>
-    <div class="pop-ad">広告</div>
-    <div class="pop-actions">
-      <a class="btn line" href="https://lin.ee/yourCode" target="_blank" rel="noopener">LINE公式を友だち追加</a>
-      <button id="popClose" class="btn fill">閉じる</button>
-    </div>
-  </div>
-</div>
-
-<!-- ===== ヘッダー ===== -->
 <header class="site-header">
   <div class="container hdr">
+    <!-- ロゴは1行で -->
     <a class="brand" id="brand" href="#list"><span class="dot"></span><strong>マジつなぐ</strong></a>
 
     <div class="header-right">
+      <!-- 右上：卒年チップ（26/27/28/すべて） -->
+      <div class="yearchips-hdr" id="yearChipsHdr" aria-label="卒年"></div>
+
+      <!-- 任意：ヘッダーからも開けるショートカット -->
+      <button id="openSearch" class="btn">検索</button>
+
+      <!-- 認証UI -->
       <div class="auth">
         <button id="btnLogin" class="link">ログイン</button>
         <span class="sep">/</span>
@@ -34,17 +29,19 @@
         <button id="btnLogout" class="link" hidden>ログアウト</button>
       </div>
 
+      <!-- メニュー -->
       <div class="menu-wrap">
         <button class="menu-btn" id="menuBtn">メニュー ▾</button>
         <div class="menu" id="menu">
-          <button data-view="submit">採用担当者様</button>
+          <button data-view="submit">採用担当者様（投稿）</button>
+          <button data-view="admin">管理（承認）</button>
+          <div class="sep"></div>
+          <button data-view="profile">プロフィール</button>
           <button data-view="contact">お問い合わせ</button>
+          <div class="sep"></div>
           <button data-view="terms">利用規約</button>
           <button data-view="privacy">プライバシー</button>
           <button data-view="about">会社情報</button>
-          <div class="sep"></div>
-          <button data-view="admin">管理（承認）</button>
-          <button data-view="profile">プロフィール</button>
         </div>
       </div>
     </div>
@@ -52,128 +49,80 @@
 </header>
 
 <main class="container main">
-  <section class="circle-row">
-    <div class="circle"></div><div class="circle"></div><div class="circle"></div><div class="circle"></div>
+  <!-- ヘッダー直下：四角い検索ランチャー（クリックでポップを開く） -->
+  <section class="card search-launch" id="searchLaunch" role="button" tabindex="0" aria-label="検索条件を開く">
+    <div class="search-launch__inner">
+      <div class="search-launch__icon">🔎</div>
+      <div class="search-launch__text">
+        <div class="search-launch__title">条件でさがす</div>
+        <div class="search-launch__hint">タップして検索条件を入力（フリーワード / 職種 / オンライン・対面 / 期間 など）</div>
+      </div>
+    </div>
   </section>
 
-  <!-- ===== 一覧 ===== -->
+  <!-- 一覧 -->
   <section id="view-list" class="view on">
-    <div class="card card--filters">
-      <div class="filters-head">
-        <h2 class="h2">求人一覧</h2>
-        <div class="years" id="yearChips" aria-label="卒年"></div>
+    <div class="card">
+      <div class="flex-between">
+        <div class="h2">求人一覧</div>
+        <div class="small">ヒット数: <strong id="count">0</strong></div>
       </div>
-
-      <!-- フィルタ：必要最低限 & 期間は1日でも重なればOK -->
-      <form id="filters" class="filters" autocomplete="off">
-        <label class="field col-2">
-          <span>フリーワード</span>
-          <input id="q" class="ipt" placeholder="会社 / タイトル / 説明 / タグ" />
-        </label>
-
-        <label class="field">
-          <span>並び替え</span>
-          <select id="sort" class="ipt">
-            <option value="new">新着順</option>
-            <option value="old">古い順</option>
-            <option value="wageDesc">時給が高い順</option>
-            <option value="wageAsc">時給が低い順</option>
-          </select>
-        </label>
-
-        <label class="field">
-          <span>職種</span>
-          <select id="jobType" class="ipt">
-            <option value="">指定なし</option>
-            <option>エンジニア</option>
-            <option>デザイナー</option>
-            <option>マーケ</option>
-            <option>セールス</option>
-            <option>コンサル</option>
-          </select>
-        </label>
-
-        <div class="field checks">
-          <span>特徴</span>
-          <label><input type="checkbox" id="modeOnline"> オンライン</label>
-          <label><input type="checkbox" id="modeOffline"> 対面</label>
-          <label><input type="checkbox" id="favOnly"> ★ お気に入りのみ</label>
-          <label class="switch"><input type="checkbox" id="onlyOpen" checked> 募集中のみ</label>
-        </div>
-
-        <div class="field range">
-          <span>期間</span>
-          <input type="date" id="startDate" class="ipt">
-          <span class="wave">〜</span>
-          <input type="date" id="endDate" class="ipt">
-        </div>
-
-        <label class="field">
-          <span>ページサイズ</span>
-          <select id="pageSize" class="ipt"><option>10</option><option>20</option><option>30</option></select>
-        </label>
-
-        <div class="field actions col-2">
-          <button class="btn" type="button" id="resetBtn">条件リセット</button>
-          <button class="btn fill" type="submit">この条件で検索</button>
-        </div>
-      </form>
-
-      <div class="promo-slot" id="promoSlot">ここに訴求広告（jpg）が入ります</div>
-    </div>
-
-    <div class="result-head container--inner">
-      <div id="count">0件</div>
       <div class="chipbar" id="activeChips"></div>
     </div>
 
+    <!-- 結果カード（中央1列） -->
     <section id="cards" class="grid-cards">
-      <div class="skeleton tall"></div><div class="skeleton tall"></div><div class="skeleton tall"></div>
+      <!-- 初期は空（ダミー無し）。投稿→承認で出現 -->
     </section>
+
     <div id="pager" class="pager"></div>
   </section>
 
-  <!-- ===== 採用担当者（投稿） ===== -->
+  <!-- 採用担当者（投稿） -->
   <section id="view-submit" class="view">
     <div class="card">
       <h2 class="h2">採用担当者様向け：求人投稿</h2>
       <form id="submitForm" class="form">
         <input name="title" class="ipt" required placeholder="★ タイトル">
         <input name="company" class="ipt" required placeholder="★ 会社名">
+
         <div class="grid-2">
           <select name="year" class="ipt" required>
-            <option value="">★ 卒年</option><option>2026</option><option>2027</option><option>2028</option>
+            <option value="">★ 卒年</option>
+            <option>2026</option><option>2027</option><option>2028</option>
           </select>
           <select name="jobType" class="ipt">
             <option>エンジニア</option><option>デザイナー</option><option>マーケ</option><option>セールス</option><option>コンサル</option>
           </select>
         </div>
+
         <div class="grid-2">
-          <input name="wage" class="ipt" type="number" placeholder="時給（整数）">
+          <input name="wage" class="ipt" type="number" placeholder="時給（整数・任意）">
           <select name="mode" class="ipt"><option>オンライン</option><option>オフライン</option><option>ハイブリッド</option></select>
         </div>
+
         <div class="grid-2">
           <input name="place" class="ipt" placeholder="勤務地 / 会場">
           <input name="tags" class="ipt" placeholder="タグ（カンマ区切り）">
         </div>
 
-        <!-- 期間は開始/終了どちらかでもOK。未指定は1日イベント扱い -->
         <div class="grid-2">
           <label>開始日<input name="dateStart" class="ipt" type="date"></label>
           <label>終了日<input name="dateEnd" class="ipt" type="date"></label>
         </div>
 
         <input name="applyUrl" class="ipt" placeholder="応募URL（任意、httpsから）">
-        <textarea name="desc" class="ipt" rows="4" placeholder="募集概要"></textarea>
-        <label class="small">画像（1枚）</label>
+        <textarea name="desc" class="ipt" rows="4" placeholder="募集概要（任意）"></textarea>
+
+        <label class="small">メイン画像（1枚・任意）</label>
         <input type="file" id="imgFile" accept="image/*">
+
         <div class="actions"><button class="btn fill">送信（承認待ち）</button></div>
       </form>
-      <p class="small">※ 送信後は「管理（承認）」に自動で遷移します。</p>
     </div>
   </section>
 
-  <!-- ===== 管理（承認） ===== -->
+  <!-- 管理（承認） -->
   <section id="view-admin" class="view">
     <div class="card">
       <h2 class="h2">管理（承認）</h2>
@@ -190,43 +139,105 @@
     </div>
   </section>
 
-  <!-- ===== プロフィール ===== -->
+  <!-- プロフィール -->
   <section id="view-profile" class="view">
     <div class="card">
-      <h2 class="h2">アカウント</h2>
+      <h2 class="h2">プロフィール</h2>
       <div id="accountBanner" class="banner"></div>
-      <!-- 省略（前回と同じ） -->
+      <div class="profile-grid">
+        <div class="box">
+          <div class="box-title">基本</div>
+          <label>名前<input id="pfName" class="ipt"></label>
+          <label>大学/学校名<input id="pfUniv" class="ipt"></label>
+          <div class="grid-2">
+            <label>学年/卒年
+              <select id="pfGrade" class="ipt">
+                <option></option><option>学部1</option><option>学部2</option><option>学部3</option><option>学部4</option>
+                <option>修士1</option><option>修士2</option><option>2026卒</option><option>2027卒</option><option>2028卒</option>
+              </select>
+            </label>
+            <label>専攻<input id="pfMajor" class="ipt"></label>
+          </div>
+          <label>希望職種<input id="pfDesiredRole" class="ipt"></label>
+          <label>希望勤務地<input id="pfLocation" class="ipt"></label>
+        </div>
+        <div class="box">
+          <div class="box-title">PR</div>
+          <label>スキルタグ<input id="pfSkills" class="ipt" placeholder="Go, React, SQL"></label>
+          <label>URL<input id="pfLinks" class="ipt" placeholder="https://..."></label>
+          <label>自己PR<textarea id="pfPR" class="ipt" rows="6"></textarea></label>
+          <label>顔写真<input type="file" id="pfAvatar" accept="image/*"></label>
+          <div class="avatar-wrap"><img id="pfAvatarPreview" alt="" /></div>
+          <div class="level-wrap">
+            <div>レベル <strong id="pfLevel">1</strong>（参加 <span id="pfJoined">0</span> 回 / 参加企業 合計 <span id="pfJoinedCompanies">0</span>）</div>
+            <div class="level-bar"><span id="pfLevelBar"></span></div>
+          </div>
+          <div class="actions"><button id="pfSave" class="btn fill">保存</button></div>
+        </div>
+      </div>
+      <div class="box">
+        <div class="box-title">活動記録</div>
+        <ul id="pfHistory" class="small" style="margin:0;padding-left:1rem"></ul>
+      </div>
     </div>
   </section>
 
-  <!-- ===== お問い合わせ ===== -->
+  <!-- お問い合わせ -->
   <section id="view-contact" class="view">
     <div class="card">
       <h2 class="h2">お問い合わせ</h2>
-      <!-- 省略（前回と同じ） -->
+      <form id="contactForm" class="form">
+        <div class="grid-2">
+          <label>あなたのメール<input id="cEmail" class="ipt" type="email" placeholder="example@mail.com" required></label>
+          <label>カテゴリ
+            <select id="cCategory" class="ipt">
+              <option>一般</option><option>不具合</option><option>要望</option><option>採用について</option>
+            </select>
+          </label>
+        </div>
+        <label>件名<input id="cSubject" class="ipt" required></label>
+        <label>内容<textarea id="cBody" class="ipt" rows="6" required></textarea></label>
+        <div class="actions">
+          <button class="btn" type="button" id="contactSaveCSV">CSV保存のみ</button>
+          <button class="btn fill" type="submit">送信</button>
+        </div>
+        <p class="small">宛先: <strong id="contactToLabel">contact@example.com</strong></p>
+      </form>
     </div>
   </section>
-
-  <section id="view-terms" class="view"><div class="card"><h2 class="h2">利用規約</h2><p>テキスト</p></div></section>
-  <section id="view-privacy" class="view"><div class="card"><h2 class="h2">プライバシー</h2><p>テキスト</p></div></section>
-  <section id="view-about" class="view"><div class="card"><h2 class="h2">会社情報</h2><p>テキスト</p></div></section>
 </main>
 
 <a class="floating-line" href="https://lin.ee/yourCode" target="_blank" rel="noopener">LINE</a>
 
-<!-- ===== 案件 詳細モーダル ===== -->
-<div id="jobModal" class="modal" aria-hidden="true">
-  <div class="modal__dialog" role="dialog" aria-modal="true" aria-labelledby="jobModalTitle">
-    <button class="modal__close" id="jobModalClose" aria-label="閉じる">×</button>
-    <div class="modal__imgWrap"><img id="jobModalImg" alt=""></div>
+<!-- 検索ポップ（クリックで開く） -->
+<div id="searchPop" class="modal" aria-hidden="true">
+  <div class="modal__dialog modal--search" role="dialog" aria-modal="true" aria-labelledby="spTitle">
+    <button class="modal__close" id="spClose" aria-label="閉じる">×</button>
     <div class="modal__body">
-      <h3 id="jobModalTitle"></h3>
-      <div id="jobModalMeta" class="modal__meta"></div>
-      <p id="jobModalDesc" class="modal__desc"></p>
-      <div class="modal__actions">
-        <button id="jobModalFav" class="btn">★ お気に入り</button>
-        <button id="jobModalJoin" class="btn fill">参加する</button>
-      </div>
+      <h3 id="spTitle">条件を入力</h3>
+      <form id="searchForm" class="form">
+        <label>フリーワード<input id="sp_q" class="ipt" placeholder="会社 / タイトル / 説明 / タグ"></label>
+        <label>職種
+          <select id="sp_jobType" class="ipt">
+            <option value="">指定なし</option>
+            <option>エンジニア</option><option>デザイナー</option><option>マーケ</option><option>セールス</option><option>コンサル</option>
+          </select>
+        </label>
+        <div class="checks">
+          <label><input type="checkbox" id="sp_modeOnline"> オンライン</label>
+          <label><input type="checkbox" id="sp_modeOffline"> 対面</label>
+          <label class="switch"><input type="checkbox" id="sp_onlyOpen" checked> 募集中のみ</label>
+          <label><input type="checkbox" id="sp_favOnly"> ★お気に入りのみ</label>
+        </div>
+        <div class="grid-2">
+          <label>開始日<input type="date" id="sp_start" class="ipt"></label>
+          <label>終了日<input type="date" id="sp_end" class="ipt"></label>
+        </div>
+        <div class="actions">
+          <button class="btn" type="button" id="spClear">クリア</button>
+          <button class="btn fill" type="submit">この条件で検索</button>
+        </div>
+      </form>
     </div>
   </div>
 </div>
