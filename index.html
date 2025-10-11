@@ -5,32 +5,28 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
   <title>マジつなぐ | 長期インターン・イベント紹介</title>
   <link rel="stylesheet" href="./style.css"/>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect rx=%2220%22 width=%22100%22 height=%22100%22 fill=%22%23ff7a00%22/></svg>">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect rx=%2222%22 width=%22100%22 height=%22100%22 fill=%22%23ff7a00%22/></svg>">
 </head>
 <body>
 
+<!-- ===== ヘッダー（スマホ優先の1行） ===== -->
 <header class="site-header">
   <div class="container hdr">
     <button id="brand" class="brand" aria-label="ホームへ">
       <span class="dot"></span><strong>マジつなぐ</strong>
     </button>
 
-    <div class="hdr-right">
-      <!-- 卒年チップ -->
-      <nav class="yearchips-hdr" id="yearChipsHdr"></nav>
+    <!-- 卒年チップ -->
+    <nav class="yearchips-hdr" id="yearChipsHdr"></nav>
 
-      <!-- 検索ランチャーをすぐ開けるボタン -->
-      <button id="openSearch" class="btn">検索</button>
+    <!-- 右側操作 -->
+    <div class="hdr-actions">
+      <button id="openSearch" class="btn pill">検索</button>
+      <button id="btnLogin"  class="link">ログイン</button><span class="sep">/</span>
+      <button id="btnSignup" class="link">新規登録</button>
+      <span id="who" class="who" hidden></span>
+      <button id="btnLogout" class="link" hidden>ログアウト</button>
 
-      <!-- 認証 -->
-      <div class="auth">
-        <button id="btnLogin" class="link">ログイン</button><span class="sep">/</span>
-        <button id="btnSignup" class="link">新規登録</button>
-        <span id="who" class="who" hidden></span>
-        <button id="btnLogout" class="link" hidden>ログアウト</button>
-      </div>
-
-      <!-- メニュー -->
       <div class="menu-wrap">
         <button class="menu-btn" id="menuBtn">メニュー ▾</button>
         <div class="menu" id="menu">
@@ -51,23 +47,23 @@
 
 <main class="container main">
 
-  <!-- ヒーロー訴求（上余白を詰め、画像だけでも見栄え） -->
+  <!-- ヒーロー訴求（上の大きな余白を排除） -->
   <section class="hero">
-    <a id="heroLink" class="hero-img" target="_blank" rel="noopener" aria-label="訴求広告（差し替え可）"></a>
+    <a id="heroLink" class="hero-img" target="_blank" rel="noopener" aria-label="訴求広告（画像差し替え可）"></a>
   </section>
 
-  <!-- 検索ランチャー（クリックでポップ） -->
+  <!-- 検索ランチャー（タップ→ポップ表示） -->
   <section class="card search-launch" id="searchLaunch" role="button" tabindex="0" aria-label="検索条件を開く">
     <div class="search-launch__inner">
       <div class="search-launch__icon">🔎</div>
       <div class="search-launch__text">
         <div class="search-launch__title">条件でさがす</div>
-        <div class="search-launch__hint">タップして検索条件を入力（フリーワード / 職種 / オンライン・対面 / 開催期間）</div>
+        <div class="search-launch__hint">フリーワード / 職種 / オンライン・対面 / 開催期間</div>
       </div>
     </div>
   </section>
 
-  <!-- 条件チップ/件数 -->
+  <!-- 状態バー -->
   <section class="card card--tight">
     <div class="flex-between">
       <div class="small">ヒット数: <strong id="count">0</strong></div>
@@ -75,26 +71,43 @@
     </div>
   </section>
 
-  <!-- 一覧（縦1カラム・大きめ） -->
+  <!-- 一覧：1カラム・大きめ・左右に余白を付けて読みやすく -->
   <section id="cards" class="stack-cards"></section>
   <div id="pager" class="pager"></div>
 
-  <!-- 下段 訴求ボックス（枠を整え、画像・ボタン行を揃える） -->
+  <!-- 下段 訴求ボックス -->
   <section class="card card--tight">
     <div class="adbox">
       <div class="ad-img" id="adImg">広告画像（JPG）</div>
       <div class="ad-body">
         <div class="ad-title">長期インターン特集</div>
-        <div class="ad-desc small">画像とリンクを差し替えるだけでOK。スマホ優先で横幅100%、PCでも余白バランス良く表示されます。</div>
-        <div class="actions">
-          <a class="btn" id="adLink" target="_blank" rel="noopener">詳しく見る</a>
-        </div>
+        <div class="ad-desc small">スマホ優先で横幅100%。リンクと画像を差し替えるだけ。</div>
+        <div class="actions"><a id="adLink" class="btn pill" target="_blank" rel="noopener">詳しく見る</a></div>
       </div>
     </div>
   </section>
 </main>
 
-<!-- ====== 検索ポップ ====== -->
+<!-- ===== LINE 友だち追加（常時ボタン + ポップ） ===== -->
+<button class="line-fab" id="openLine">LINE 追加</button>
+<div id="lineModal" class="modal" aria-hidden="true">
+  <div class="modal__dialog modal--line" role="dialog" aria-modal="true" aria-labelledby="lineTitle">
+    <button class="modal__close" data-close="lineModal" aria-label="閉じる">×</button>
+    <div class="modal__body">
+      <h3 id="lineTitle" style="margin-top:4px">LINE 公式アカウント</h3>
+      <!-- 1) 公式プロフィールページを iframe で埋め込み（PC/Androidで有効） -->
+      <iframe id="lineFrame" class="line-frame" title="LINE Profile" referrerpolicy="no-referrer"></iframe>
+      <!-- 2) リンク/QR のフォールバック -->
+      <div class="line-fallback">
+        <a id="lineLink" class="btn pill fill" target="_blank" rel="noopener">LINE を開く</a>
+        <img id="lineQR" alt="LINE QR" class="line-qr"/>
+        <p class="small" style="text-align:center;color:#6b7280">※ iPhoneの一部環境ではプロフィールの埋め込みが表示されないため、上のボタンかQRから追加してください。</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 検索ポップ ===== -->
 <div id="searchPop" class="modal" aria-hidden="true">
   <div class="modal__dialog modal--search" role="dialog" aria-modal="true" aria-labelledby="spTitle">
     <button class="modal__close" id="spClose" aria-label="閉じる">×</button>
@@ -103,7 +116,9 @@
       <form id="searchForm" class="form">
         <label>フリーワード<input id="sp_q" class="ipt" placeholder="会社 / タイトル / 説明 / タグ"></label>
         <label>職種
-          <select id="sp_jobType" class="ipt"><option value="">指定なし</option><option>エンジニア</option><option>デザイナー</option><option>マーケ</option><option>営業</option></select>
+          <select id="sp_jobType" class="ipt">
+            <option value="">指定なし</option><option>エンジニア</option><option>デザイナー</option><option>マーケ</option><option>営業</option>
+          </select>
         </label>
         <div class="checks">
           <label><input type="checkbox" id="sp_modeOnline"> オンライン</label>
@@ -111,7 +126,6 @@
           <label class="switch"><input type="checkbox" id="sp_onlyOpen" checked> 募集中のみ</label>
           <label><input type="checkbox" id="sp_favOnly"> ★お気に入りのみ</label>
         </div>
-        <!-- 開催期間（表記を統一。UIは2つの入力だが1行で“開催期間”） -->
         <div class="range">
           <div class="range__label">開催期間</div>
           <div class="range__inputs">
@@ -123,10 +137,8 @@
         <div class="grid-2">
           <label>並び順
             <select id="sp_sort" class="ipt">
-              <option value="new">新着順</option>
-              <option value="old">古い順</option>
-              <option value="wageDesc">時給 高→低</option>
-              <option value="wageAsc">時給 低→高</option>
+              <option value="new">新着順</option><option value="old">古い順</option>
+              <option value="wageDesc">時給 高→低</option><option value="wageAsc">時給 低→高</option>
             </select>
           </label>
           <label>1ページ表示件数
@@ -134,15 +146,15 @@
           </label>
         </div>
         <div class="actions">
-          <button class="btn" type="button" id="spClear">クリア</button>
-          <button class="btn fill" type="submit">この条件で検索</button>
+          <button class="btn pill" type="button" id="spClear">クリア</button>
+          <button class="btn pill fill" type="submit">この条件で検索</button>
         </div>
       </form>
     </div>
   </div>
 </div>
 
-<!-- ====== 求人詳細（画像つきで必ず出る） ====== -->
+<!-- ===== 求人詳細 ===== -->
 <div id="jobModal" class="modal" aria-hidden="true">
   <div class="modal__dialog" role="dialog" aria-modal="true" aria-labelledby="jobModalTitle">
     <button class="modal__close" id="jobModalClose" aria-label="閉じる">×</button>
@@ -153,15 +165,16 @@
         <div id="jobModalMeta" class="meta" style="margin:.5rem 0"></div>
         <p id="jobModalDesc" class="small"></p>
         <div class="actions">
-          <button id="jobModalFav" class="btn">★ お気に入り</button>
-          <a id="jobModalJoin" class="btn fill" target="_blank" rel="noopener">参加</a>
+          <button id="jobModalFav" class="btn pill">★ お気に入り</button>
+          <a id="jobModalJoin" class="btn pill fill" target="_blank" rel="noopener">参加</a>
         </div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ====== 全画面モーダル群（ホーム色付きバー） ====== -->
+<!-- ===== 全画面モーダル群（プロフィール/管理/お問い合わせ/規約など） ===== -->
+<!-- 省略なく全部入ってます（前回版の機能はそのまま） -->
 <div id="authModal" class="modal modal--full" aria-hidden="true">
   <div class="modal__dialog modal__dialog--full" role="dialog" aria-modal="true">
     <div class="fullbar fullbar--home">
@@ -173,23 +186,16 @@
       <div id="loginBox" class="grid-2">
         <label>メール<input id="authEmail" class="ipt" type="email"></label>
         <label>パスワード<input id="authPass" class="ipt" type="password" placeholder="8文字以上"></label>
-        <div class="col-2 small">
-          <a id="openForgot" class="link">パスワードをお忘れの方はこちら</a>
-        </div>
-        <div class="actions col-2">
-          <button id="doLogin" class="btn">ログイン</button>
-        </div>
+        <div class="col-2 small"><a id="openForgot" class="link">パスワードをお忘れの方はこちら</a></div>
+        <div class="actions col-2"><button id="doLogin" class="btn pill">ログイン</button></div>
       </div>
-
       <h3 style="margin-top:18px">新規登録</h3>
       <div id="signupBox" class="grid-2">
         <label>氏名<input id="sgName" class="ipt"></label>
         <label>大学名<input id="sgUniv" class="ipt"></label>
         <label>メール<input id="sgEmail" class="ipt" type="email"></label>
         <label>パスワード<input id="sgPass" class="ipt" type="password" placeholder="8文字以上"></label>
-        <div class="actions col-2">
-          <button id="doSignup" class="btn fill">この内容で登録</button>
-        </div>
+        <div class="actions col-2"><button id="doSignup" class="btn pill fill">この内容で登録</button></div>
       </div>
       <div id="authHint" class="small" style="margin-top:6px;color:#6b7280"></div>
     </div>
@@ -208,15 +214,11 @@
         <label>氏名<input id="fgName" class="ipt"></label>
         <label>大学名<input id="fgUniv" class="ipt"></label>
         <label class="col-2">メール<input id="fgEmail" class="ipt" type="email"></label>
-        <div class="actions col-2">
-          <button id="doVerify" class="btn fill">本人確認</button>
-        </div>
+        <div class="actions col-2"><button id="doVerify" class="btn pill fill">本人確認</button></div>
       </div>
       <div id="resetBox" class="grid-2" style="display:none">
         <label class="col-2">新しいパスワード<input id="fgNewPass" class="ipt" type="password" placeholder="8文字以上"></label>
-        <div class="actions col-2">
-          <button id="doReset" class="btn fill">再設定する</button>
-        </div>
+        <div class="actions col-2"><button id="doReset" class="btn pill fill">再設定する</button></div>
       </div>
       <div id="fgHint" class="small" style="margin-top:6px;color:#6b7280"></div>
     </div>
@@ -242,7 +244,7 @@
         <label class="col-2">自己PR<textarea id="pfPR" class="ipt" rows="5"></textarea></label>
       </div>
       <div class="small">※ 保存するとユーザーCSVにも自動反映。</div>
-      <div class="actions"><button id="pfSave" class="btn fill">保存</button></div>
+      <div class="actions"><button id="pfSave" class="btn pill fill">保存</button></div>
     </div>
   </div>
 </div>
@@ -263,7 +265,7 @@
         <label class="col-2">お問い合わせ内容<textarea id="mtBody" class="ipt" rows="6" placeholder="資料請求 / バグ報告 など自由記述"></textarea></label>
       </div>
       <label class="agree"><input type="checkbox" id="mtAgree"> プライバシーポリシーに同意する</label>
-      <div class="actions"><button class="btn" data-close="materialsModal">閉じる</button><button id="mtSend" class="btn fill">送信</button></div>
+      <div class="actions"><button class="btn pill" data-close="materialsModal">閉じる</button><button id="mtSend" class="btn pill fill">送信</button></div>
       <div class="small">※ 送信するとお問い合わせCSVに追記されます。</div>
     </div>
   </div>
@@ -280,7 +282,7 @@
       <div id="adminGate">
         <label>パスワード</label>
         <input id="adminPass" class="ipt" type="password" placeholder="8桁英数字">
-        <button id="enterAdmin" class="btn fill">入る</button>
+        <button id="enterAdmin" class="btn pill fill">入る</button>
         <div class="small">既定パスワード: <code>Maji2025</code></div>
       </div>
 
@@ -301,39 +303,30 @@
           <label class="col-2">応募URL<input id="sApply" class="ipt" placeholder="https://..."></label>
           <label class="col-2">画像URL（1枚）<input id="sImage" class="ipt" placeholder="https://...jpg"></label>
         </div>
-        <div class="actions"><button id="submitJob" class="btn fill">投稿（承認待ち）</button></div>
+        <div class="actions"><button id="submitJob" class="btn pill fill">投稿（承認待ち）</button></div>
 
         <h4 style="margin-top:18px">承認</h4>
         <div id="adminList" class="admin-list"></div>
 
         <h4 style="margin-top:18px">CSVエクスポート</h4>
         <div class="grid-2">
-          <a id="csvUsers" class="btn" download="users.csv">ユーザーCSV</a>
-          <a id="csvContacts" class="btn" download="contacts.csv">お問い合わせCSV</a>
+          <a id="csvUsers" class="btn pill" download="users.csv">ユーザーCSV</a>
+          <a id="csvContacts" class="btn pill" download="contacts.csv">お問い合わせCSV</a>
         </div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- 利用規約 / プライバシー / 会社情報（全画面） -->
+<!-- 各種全画面(規約/プラ/会社情報) -->
 <div id="termsModal" class="modal modal--full" aria-hidden="true">
-  <div class="modal__dialog modal__dialog--full" role="dialog" aria-modal="true">
-    <div class="fullbar fullbar--home"><button class="fullbar-home" data-fullhome>ホームへ</button><button class="modal__close" data-close="termsModal">×</button></div>
-    <div class="modal__body"><h3>利用規約</h3><p class="small">ここに規約本文（ダミー）。</p></div>
-  </div>
+  <div class="modal__dialog modal__dialog--full"><div class="fullbar fullbar--home"><button class="fullbar-home" data-fullhome>ホームへ</button><button class="modal__close" data-close="termsModal">×</button></div><div class="modal__body"><h3>利用規約</h3><p class="small">ダミー本文</p></div></div>
 </div>
 <div id="privacyModal" class="modal modal--full" aria-hidden="true">
-  <div class="modal__dialog modal__dialog--full" role="dialog" aria-modal="true">
-    <div class="fullbar fullbar--home"><button class="fullbar-home" data-fullhome>ホームへ</button><button class="modal__close" data-close="privacyModal">×</button></div>
-    <div class="modal__body"><h3>プライバシー</h3><p class="small">ここにプライバシーポリシー（ダミー）。</p></div>
-  </div>
+  <div class="modal__dialog modal__dialog--full"><div class="fullbar fullbar--home"><button class="fullbar-home" data-fullhome>ホームへ</button><button class="modal__close" data-close="privacyModal">×</button></div><div class="modal__body"><h3>プライバシー</h3><p class="small">ダミー本文</p></div></div>
 </div>
 <div id="aboutModal" class="modal modal--full" aria-hidden="true">
-  <div class="modal__dialog modal__dialog--full" role="dialog" aria-modal="true">
-    <div class="fullbar fullbar--home"><button class="fullbar-home" data-fullhome>ホームへ</button><button class="modal__close" data-close="aboutModal">×</button></div>
-    <div class="modal__body"><h3>会社情報</h3><p class="small">ここに会社情報（ダミー）。</p></div>
-  </div>
+  <div class="modal__dialog modal__dialog--full"><div class="fullbar fullbar--home"><button class="fullbar-home" data-fullhome>ホームへ</button><button class="modal__close" data-close="aboutModal">×</button></div><div class="modal__body"><h3>会社情報</h3><p class="small">ダミー本文</p></div></div>
 </div>
 
 <script src="./script.js" defer></script>

@@ -2,45 +2,43 @@
 *,*::before,*::after{box-sizing:border-box}
 html,body{margin:0}
 :root{
-  --bg:#fff; --text:#111827; --muted:#6b7280;
-  --primary:#ff7a00; --primary-weak:#fff1e6; --border:#ffd9b8;
-  --container: 1040px; --radius:16px;
+  --primary:#ff7a00; --primary-weak:#fff3e7; --border:#ffd9b8;
+  --text:#111827; --muted:#6b7280; --bg:#fff;
+  --container: 1000px; --radius:16px;
 }
 body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans JP",sans-serif;color:var(--text);background:var(--bg);line-height:1.6}
-.container{width:min(100% - 22px,var(--container));margin-inline:auto}
+.container{width:min(100% - 20px,var(--container));margin-inline:auto}
 a{text-decoration:none;color:inherit}
 
-/* ===== Button / Inputs ===== */
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:.4rem;padding:.62rem 1rem;border-radius:14px;border:1.5px solid var(--primary);color:var(--primary);background:#fff;cursor:pointer}
+/* ===== Controls ===== */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.4rem;padding:.62rem 1rem;border-radius:12px;border:1.5px solid var(--primary);background:#fff;color:var(--primary);cursor:pointer}
 .btn.fill{background:var(--primary);color:#fff}
+.pill{border-radius:999px}
 .link{border:0;background:transparent;color:#374151;cursor:pointer}
-.ipt{padding:.7rem .9rem;border:1.5px solid var(--border);border-radius:14px;background:#fff;width:100%}
-.small{color:var(--muted);font-size:.93rem}
+.sep{color:#d1d5db;margin:0 .25rem}
+.ipt{padding:.7rem .9rem;border:1.5px solid var(--border);border-radius:12px;background:#fff;width:100%}
+.small{color:var(--muted);font-size:.92rem}
 
 /* ===== Header ===== */
-.site-header{position:sticky;top:0;background:#fff;border-bottom:1px solid var(--border);z-index:10}
-.hdr{display:flex;align-items:center;justify-content:space-between;padding:.55rem 0} /* ←上の空間を詰める */
+.site-header{position:sticky;top:0;background:#fff;border-bottom:1px solid var(--border);z-index:30}
+.hdr{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;padding:.5rem 0}
 .brand{display:flex;gap:.55rem;align-items:center;background:none;border:0;cursor:pointer}
-.brand .dot{width:24px;height:24px;border-radius:7px;background:linear-gradient(135deg,var(--primary),#ffb066)}
-.hdr-right{display:flex;align-items:center;gap:.55rem;flex-wrap:wrap;justify-content:flex-end}
-
-/* ===== Year chips ===== */
-.yearchips-hdr{display:flex;gap:.35rem;align-items:center;flex-wrap:wrap}
-.year-chip{padding:.35rem .7rem;border-radius:999px;border:1.5px solid var(--border);background:#fff;cursor:pointer;font-size:.9rem}
+.brand .dot{width:22px;height:22px;border-radius:7px;background:linear-gradient(135deg,var(--primary),#ffb066)}
+.hdr-actions{display:flex;align-items:center;gap:.35rem}
+.yearchips-hdr{display:flex;gap:.35rem;align-items:center;flex-wrap:wrap;justify-self:center}
+.year-chip{padding:.35rem .7rem;border-radius:999px;border:1.5px solid var(--border);background:#fff;cursor:pointer;font-size:.95rem}
 .year-chip.is-active{background:var(--primary-weak);border-color:#ffcba6;color:#c05800}
-
-/* ===== Menu ===== */
 .menu-wrap{position:relative}
-.menu-btn{padding:.5rem .85rem;border-radius:12px;border:1.5px solid var(--border);background:#fff;cursor:pointer}
-.menu{position:absolute;right:0;top:44px;background:#fff;border:1.5px solid var(--border);border-radius:14px;box-shadow:0 10px 24px rgba(0,0,0,.06);min-width:260px;display:none;overflow:hidden}
+.menu-btn{padding:.45rem .8rem;border-radius:999px;border:1.5px solid var(--border);background:#fff;cursor:pointer}
+.menu{position:absolute;right:0;top:44px;background:#fff;border:1.5px solid var(--border);border-radius:14px;box-shadow:0 12px 28px rgba(0,0,0,.08);min-width:260px;display:none;overflow:hidden}
 .menu.show{display:block}
 .menu button{display:block;width:100%;text-align:left;background:#fff;border:0;padding:.85rem 1rem;cursor:pointer}
 .menu button:hover{background:var(--primary-weak)}
 .menu .sep{height:1px;background:var(--border);margin:.25rem 0}
 .menu .home-item{color:#c05800;font-weight:700}
 
-/* ===== Main ===== */
-.main{padding:12px 0 24px} /* 下も整える */
+/* ===== Layout ===== */
+.main{padding:12px 0 22px}
 .card{background:#fff;border:1.5px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:14px}
 .card--tight{padding:12px}
 .flex-between{display:flex;align-items:center;justify-content:space-between}
@@ -62,31 +60,25 @@ a{text-decoration:none;color:inherit}
 .search-launch__title{font-weight:700}
 .search-launch__hint{color:#6b7280;font-size:.92rem}
 
-/* 開催期間行 */
-.range{display:grid;gap:6px;margin:6px 0 2px}
-.range__label{font-weight:700}
-.range__inputs{display:flex;gap:8px;align-items:center}
-.range__wave{color:#9ca3af}
-
 /* ===== Chips / list ===== */
 .chipbar{display:flex;gap:6px;flex-wrap:wrap}
 .chip{padding:.25rem .6rem;border-radius:999px;border:1px solid #ffd7b8;background:#fff3e8;color:#b94d00;font-size:.86rem}
 
-/* ===== Cards（縦1カラム大きめ） ===== */
+/* ===== Cards（1カラム・中央寄せ・読みやすい余白） ===== */
 .stack-cards{display:grid;grid-template-columns:1fr;gap:14px;max-width:820px;margin:0 auto}
-.card-item{width:100%;border-radius:20px;overflow:hidden;border:1.5px solid var(--border);background:#fff;cursor:pointer}
+.card-item{width:100%;border-radius:18px;overflow:hidden;border:1.5px solid var(--border);background:#fff;cursor:pointer}
 .card-photo{position:relative;overflow:hidden;background:#0b1220;aspect-ratio:16/9}
 .card-photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(.92)}
 .card-photo.noimg::after{content:"No Image";position:absolute;inset:0;display:grid;place-items:center;color:#ffffffcc;font-weight:700;letter-spacing:.12em;background:linear-gradient(180deg,rgba(0,0,0,.12),rgba(0,0,0,.32))}
 .card-photo .overlay{position:absolute;left:0;right:0;bottom:0;padding:16px;background:linear-gradient(180deg,rgba(0,0,0,0) 10%,rgba(0,0,0,.7) 85%);color:#fff}
-.badge{display:inline-block;padding:.2rem .55rem;border-radius:999px;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.25);font-size:.85rem}
+.badge{display:inline-block;padding:.25rem .6rem;border-radius:999px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.25);font-size:.9rem}
 
 /* ===== Pager ===== */
 .pager{display:flex;gap:8px;justify-content:center;margin:14px 0}
 .pager button{min-width:40px;padding:.55rem .85rem;border-radius:12px;border:1.5px solid var(--border);background:#fff;cursor:pointer}
 .pager button.is-active{background:var(--primary-weak);border-color:#ffcba6;color:#c05800}
 
-/* ===== Modal ===== */
+/* ===== Modal common ===== */
 .modal{position:fixed;inset:0;background:rgba(15,23,42,.55);display:none;place-items:center;z-index:60;padding:16px}
 .modal.show,[aria-hidden="false"].modal{display:grid}
 .modal__dialog{width:min(100%,740px);background:#fff;border-radius:18px;box-shadow:0 20px 60px rgba(2,6,23,.25);overflow:hidden;position:relative;border:1.5px solid var(--border)}
@@ -95,13 +87,21 @@ a{text-decoration:none;color:inherit}
 .modal__imgWrap{width:100%;aspect-ratio:16/9;background:#f3f4f6;display:grid;place-items:center}
 .modal__imgWrap img{width:100%;height:100%;object-fit:cover}
 
+/* ===== LINE modal ===== */
+.modal--line{width:min(100%,560px)}
+.line-frame{width:100%;height:480px;border:1.5px solid var(--border);border-radius:12px}
+.line-fallback{display:grid;gap:10px;margin-top:10px;justify-items:center}
+.line-qr{width:180px;height:180px;object-fit:contain;border:1px dashed #e5e7eb;border-radius:10px}
+
+/* フローティング LINE ボタン */
+.line-fab{position:fixed;right:14px;bottom:18px;z-index:50;border:0;background:linear-gradient(135deg,#06c755,#23db73);color:#fff;padding:.7rem 1rem;border-radius:999px;box-shadow:0 8px 22px rgba(6,199,85,.35);cursor:pointer}
+
 /* ===== Fullscreen modal ===== */
 .modal--full{padding:0}
 .modal__dialog--full{width:100%;height:100%;border-radius:0;border:0;display:flex;flex-direction:column}
-.fullbar{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-bottom:1px solid var(--border);background:#fff}
-.fullbar--home{background:linear-gradient(90deg,#fff, #fff6ee)}
+.fullbar{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-bottom:1px solid var(--border);background:linear-gradient(90deg,#fff,#fff7ef)}
 .fullbar-home{border:1.5px solid var(--primary);color:#fff;background:var(--primary);border-radius:10px;padding:.45rem .8rem;cursor:pointer}
 body.full-open .main, body.full-open .search-launch, body.full-open .card--tight{display:none}
 
-/* ===== Admin ===== */
+/* Admin list */
 .admin-list .admin-item{display:flex;gap:.6rem;align-items:center;padding:.5rem;border-bottom:1px solid #f1e5da}

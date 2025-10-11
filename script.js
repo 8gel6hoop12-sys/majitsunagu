@@ -2,10 +2,15 @@
 const ADMIN_PASS = "Maji2025";
 
 /* 訴求（差し替えOK） */
-const HERO_IMG_URL = "";                       // 上段ヒーロー画像
+const HERO_IMG_URL = "";                       // 上部ヒーロー画像（空ならグレー）
 const HERO_LINK    = "https://example.com";    // ヒーローリンク
 const AD_IMG_URL   = "";                       // 下段広告画像
 const AD_LINK      = "https://example.com/ad"; // 下段広告リンク
+
+/* LINE 公式（必ず差し替え） */
+const LINE_PROFILE_URL = "https://page.line.me/xxxxx/profile"; // 公式プロフィールURL
+const LINE_ADD_URL     = "https://lin.ee/xxxxxxx";              // 友だち追加URL（短縮URL）
+const LINE_QR_IMAGE    = "";                                    // 任意: QR画像URL（空でOK）
 
 /* ========= DOM util ========= */
 const g = (id)=>document.getElementById(id);
@@ -21,7 +26,7 @@ let activeYear='all'; const years=['all','2026','2027','2028'];
 function renderYearChips(){ g('yearChipsHdr').innerHTML = years.map(y=>`<button type="button" class="year-chip ${y===activeYear?'is-active':''}" data-year="${y}">${y==='all'?'すべて':`${y}卒`}</button>`).join(''); }
 function bindYearChips(){ g('yearChipsHdr').onclick=(e)=>{const b=e.target.closest('[data-year]'); if(!b)return; activeYear=b.dataset.year; renderYearChips(); applyFilters(1);} }
 
-/* ========= サンプル求人（ベース） ========= */
+/* ========= ベース求人 ========= */
 const baseJobs = [
   {id:1,title:"長期インターン/エンジニア",company:"マジつなぐラボ",year:"2026",wage:1300,open:true,mode:"オンライン",jobType:"エンジニア",dateStart:"2025-11-01",dateEnd:"2025-11-30",place:"リモート",tags:"React,API",img:"",applyUrl:"https://example.com/apply",desc:"React/JSの長期インターン。週2〜OK。"},
   {id:2,title:"企画/マーケ インターン",company:"MZ Works",year:"2027",wage:1200,open:true,mode:"対面",jobType:"マーケ",dateStart:"2025-10-10",dateEnd:"2025-12-10",place:"東京",tags:"SNS,分析",img:"",applyUrl:"https://example.com/apply2",desc:"SNS運用とレポート。"}
@@ -70,9 +75,11 @@ function setupSearchPop(){
   };
 }
 
-/* ========= フィルタ（開催期間：1日でも重なればヒット） ========= */
-const cards=g('cards'), count=g('count'), pager=g('pager'), chips=g('activeChips'); let page=1;
+/* ========= 期間判定（1日でも重なればヒット） ========= */
 function overlaps(js,je){ const S=state.start||'0000-01-01', E=state.end||'9999-12-31'; if(!state.start && !state.end) return true; const J1=js||'', J2=je||js||''; return (S<=J2)&&(E>=J1); }
+
+/* ========= 一覧描画 ========= */
+const cards=g('cards'), count=g('count'), pager=g('pager'), chips=g('activeChips'); let page=1;
 function chipRender(){ const a=[]; if(activeYear!=='all')a.push(`${activeYear}卒`); if(state.q)a.push(`KW:${state.q}`); if(state.jobType)a.push(state.jobType); if(state.modeOnline)a.push('オンライン'); if(state.modeOffline)a.push('対面'); if(state.favOnly)a.push('★お気に入り'); if(state.onlyOpen)a.push('募集中のみ'); if(state.start||state.end)a.push(`開催期間:${state.start||'...'}〜${state.end||'...'}`); chips.innerHTML=a.map(s=>`<span class="chip">${s}</span>`).join(''); }
 function cardHTML(item){
   const noImg=!item.img, favOn=favSet.has(item.id)?'is-on':''; 
@@ -84,8 +91,8 @@ function cardHTML(item){
         <div style="font-weight:800;margin:0 0 4px">${item.title}</div>
         <div class="meta"><span class="badge">${item.company}</span><span class="badge">${item.year}卒</span><span class="badge">${item.jobType||'-'}</span><span class="badge">${item.mode||'-'}</span><span class="badge">${item.place||'-'}</span><span class="badge">${dateLabel}</span></div>
         <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
-          <button class="btn ${favOn}" data-fav="${item.id}">★ お気に入り</button>
-          <a class="btn fill" data-join="${item.id}" href="${item.applyUrl||'#'}" target="_blank" rel="noopener">参加</a>
+          <button class="btn pill ${favOn}" data-fav="${item.id}">★ お気に入り</button>
+          <a class="btn pill fill" data-join="${item.id}" href="${item.applyUrl||'#'}" target="_blank" rel="noopener">参加</a>
         </div>
       </figcaption>
     </figure>
@@ -127,8 +134,8 @@ function sessionEmail(){ return (load(SESSION_KEY,null)||{}).email||""; }
 function setSession(email){ if(email){save(SESSION_KEY,{email});} else {localStorage.removeItem(SESSION_KEY);} syncAuthUI(); }
 function syncAuthUI(){ const email=sessionEmail(), logged=!!email; g('btnLogin').hidden=g('btnSignup').hidden=logged; g('btnLogout').hidden=!logged; const who=g('who'); if(who){who.hidden=!logged; who.textContent=logged?email:"";} }
 
-g('btnSignup').onclick=()=>{ openFull('authModal'); };
-g('btnLogin').onclick =()=>{ openFull('authModal'); };
+g('btnSignup').onclick=()=>openFull('authModal');
+g('btnLogin').onclick =()=>openFull('authModal');
 g('btnLogout').onclick=()=>{ setSession(""); alert('ログアウトしました'); };
 
 g('doSignup').onclick =()=>{ const name=g('sgName').value.trim(), univ=g('sgUniv').value.trim(), email=g('sgEmail').value.trim(), pass=g('sgPass').value.trim(); if(!name||!univ||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)||pass.length<8){g('authHint').textContent='入力を確認してください';return;} const U=users(); if(U.find(u=>u.email===email)){g('authHint').textContent='このメールは登録済みです';return;} const u={email,pass,profile:{name,univ,grade:"2026",role:"",links:"",pr:""},joined:[]}; U.push(u); saveUsers(U); setSession(email); fillProfile(); alert('登録しました。プロフィールも保存しました'); closeFull('authModal'); };
@@ -142,7 +149,7 @@ let fgTargetEmail="";
 g('doVerify').onclick=()=>{ const name=g('fgName').value.trim(), univ=g('fgUniv').value.trim(), email=g('fgEmail').value.trim(); const u=users().find(x=>x.email===email && (x.profile?.name||"")===name && (x.profile?.univ||"")===univ); if(!u){ g('fgHint').textContent="一致するユーザーが見つかりません"; return; } fgTargetEmail=email; g('verifyBox').style.display='none'; g('resetBox').style.display='grid'; g('fgHint').textContent='本人確認OK。新しいパスワードを設定してください。'; };
 g('doReset').onclick=()=>{ const pw=g('fgNewPass').value.trim(); if(pw.length<8){ g('fgHint').textContent='8文字以上で入力してください'; return; } const U=users(); const u=U.find(x=>x.email===fgTargetEmail); if(!u){ g('fgHint').textContent='エラーが発生しました'; return; } u.pass=pw; saveUsers(U); alert('再設定しました。ログインしてください。'); closeFull('forgotModal'); openFull('authModal'); };
 
-/* 参加実績（お気に入りとは別カウント） */
+/* 参加実績 */
 function addParticipation(email,company){ if(!email)return; const U=users(); const u=U.find(x=>x.email===email); if(!u)return; u.joined.push(company); saveUsers(U); }
 
 /* プロフィール */
@@ -156,33 +163,29 @@ g('mtSend').onclick=()=>{ if(!g('mtAgree').checked){alert('プライバシーポ
 
 /* ========= 管理（投稿/承認/CSV） ========= */
 g('enterAdmin').onclick=()=>{ if(g('adminPass').value===ADMIN_PASS){ g('adminGate').style.display='none'; g('adminBody').style.display='block'; renderAdmin(); } else alert('パスワードが違います'); };
-g('submitJob').onclick = () => {
-  const item = {
-    id: Date.now(),
-    company: g('sCompany').value.trim(),
-    title: g('sTitle').value.trim(),
-    jobType: g('sJobType').value,
-    mode: g('sMode').value,
-    place: g('sPlace').value.trim(),
-    dateStart: g('sDateStart').value,         // ← ここを : に修正
-    dateEnd: g('sDateEnd').value || g('sDateStart').value,
-    wage: g('sWage').value,
-    week: g('sWeek').value,
-    tags: g('sTags').value.trim(),
-    desc: g('sDesc').value.trim(),
-    applyUrl: g('sApply').value.trim(),
-    image: g('sImage').value.trim(),
-    year: '2026',
-    approved: false
+g('submitJob').onclick=()=>{ 
+  const item={ 
+    id:Date.now(),
+    company:g('sCompany').value.trim(),
+    title:g('sTitle').value.trim(),
+    jobType:g('sJobType').value,
+    mode:g('sMode').value,
+    place:g('sPlace').value.trim(),
+    dateStart: g('sDateStart').value,
+    dateEnd:   g('sDateEnd').value || g('sDateStart').value,
+    wage:g('sWage').value,
+    week:g('sWeek').value,
+    tags:g('sTags').value.trim(),
+    desc:g('sDesc').value.trim(),
+    applyUrl:g('sApply').value.trim(),
+    image:g('sImage').value.trim(),
+    year:'2026',
+    approved:false
   };
-
-  const arr = loadSubmits();
-  arr.push(item);
-  saveSubmits(arr);
-  renderAdmin();
-  alert('投稿しました。承認で公開されます。');
+  const arr=loadSubmits(); arr.push(item); saveSubmits(arr);
+  renderAdmin(); alert('投稿しました。承認で公開されます。');
 };
-function renderAdmin(){ const arr=loadSubmits(); const wrap=g('adminList'); wrap.innerHTML = arr.length? arr.map(x=>`<label class="admin-item"><input type="checkbox" data-id="${x.id}" ${x.approved?'checked':''}/> <span><strong>${x.title}</strong> / ${x.company} <span class="small" style="color:#6b7280">(${x.dateStart}〜${x.dateEnd} / ${x.mode} / ${x.jobType})</span></span></label>`).join('') : '<div class="small" style="color:#6b7280">投稿はまだありません</div>'; wrap.querySelectorAll('input[type="checkbox"]').forEach(ch=>ch.onchange=()=>{ const id=+ch.dataset.id; const list=loadSubmits(); const row=list.find(r=>r.id===id); if(row){row.approved=ch.checked; saveSubmits(list); applyFilters();} }); refreshCSVs(); }
+function renderAdmin(){ const arr=loadSubmits(); const w=g('adminList'); w.innerHTML = arr.length? arr.map(x=>`<label class="admin-item"><input type="checkbox" data-id="${x.id}" ${x.approved?'checked':''}/> <span><strong>${x.title}</strong> / ${x.company} <span class="small" style="color:#6b7280">(${x.dateStart}〜${x.dateEnd} / ${x.mode} / ${x.jobType})</span></span></label>`).join('') : '<div class="small" style="color:#6b7280">投稿はまだありません</div>'; w.querySelectorAll('input[type="checkbox"]').forEach(ch=>ch.onchange=()=>{ const id=+ch.dataset.id; const list=loadSubmits(); const row=list.find(r=>r.id===id); if(row){row.approved=ch.checked; saveSubmits(list); applyFilters();} }); refreshCSVs(); }
 /* CSVリンク */
 function refreshCSVs(){ const u=users(); const uCsv=[["email","name","univ","grade","role","links","pr","joined_count","joined_list"], ...u.map(x=>[x.email,x.profile?.name||"",x.profile?.univ||"",x.profile?.grade||"",x.profile?.role||"",x.profile?.links||"", (x.profile?.pr||"").replace(/\n/g," "), x.joined.length, x.joined.join("|") ])].map(r=>r.map(v=>`"${String(v??"").replace(/"/g,'""')}"`).join(",")).join("\r\n"); g('csvUsers').href=URL.createObjectURL(new Blob([uCsv],{type:"text/csv"}));
   const c=contacts(); const cCsv=[["id","company","person","phone","email","body","created"], ...c.map(x=>[x.id,x.company,x.person,x.phone,x.email,(x.body||"").replace(/\n/g," "),x.created])].map(r=>r.map(v=>`"${String(v??"").replace(/"/g,'""')}"`).join(",")).join("\r\n"); g('csvContacts').href=URL.createObjectURL(new Blob([cCsv],{type:"text/csv"})); }
@@ -204,7 +207,7 @@ menu.onclick=(e)=>{
   if(v==='about'){ openFull('aboutModal'); return; }
 };
 
-/* 全画面の開閉（開いてる間は一覧/検索UIを隠す＆ホーム色帯） */
+/* 全画面の開閉 */
 function openFull(id){ document.body.classList.add('full-open'); const m=g(id); m.classList.add('show'); m.setAttribute('aria-hidden','false'); }
 function closeFull(id){ const m=g(id); m.classList.remove('show'); m.setAttribute('aria-hidden','true'); if(document.querySelectorAll('.modal.modal--full.show').length===0){ document.body.classList.remove('full-open'); } }
 document.querySelectorAll('[data-fullhome]').forEach(b=>b.onclick=()=>homeReset());
@@ -213,7 +216,20 @@ document.querySelectorAll('.modal.modal--full').forEach(m=>m.addEventListener('c
 
 function homeReset(){ activeYear='all'; renderYearChips(); Object.assign(state,{ q:'', jobType:'', modeOnline:false, modeOffline:false, onlyOpen:true, favOnly:false, start:'', end:'', sort:'new', size:6 }); document.body.classList.remove('full-open'); document.querySelectorAll('.modal.modal--full').forEach(x=>{x.classList.remove('show'); x.setAttribute('aria-hidden','true');}); applyFilters(1); window.scrollTo({top:0,behavior:'smooth'}); }
 
-/* ========= ヒーロー/広告の差し替え適用 ========= */
+/* ========= LINE 友だち追加（ボタン＋ポップ） ========= */
+function openLine(){ 
+  const m=g('lineModal');
+  m.classList.add('show'); m.setAttribute('aria-hidden','false');
+  g('lineFrame').src = LINE_PROFILE_URL || "about:blank";
+  g('lineLink').href = LINE_ADD_URL || LINE_PROFILE_URL || "#";
+  if(LINE_QR_IMAGE){ g('lineQR').src = LINE_QR_IMAGE; g('lineQR').style.display='block'; } else { g('lineQR').style.display='none'; }
+}
+function closeLine(){ const m=g('lineModal'); m.classList.remove('show'); m.setAttribute('aria-hidden','true'); }
+g('openLine').onclick=openLine;
+g('lineModal').addEventListener('click',e=>{ if(e.target.id==='lineModal') closeLine(); });
+document.querySelectorAll('[data-close="lineModal"]').forEach(b=>b.onclick=closeLine);
+
+/* ========= ヒーロー/広告の適用 ========= */
 (function(){
   const hero=g('heroLink'); if(HERO_IMG_URL){ hero.style.backgroundImage=`url('${HERO_IMG_URL}')`; } hero.href=HERO_LINK||'#';
   const ad=g('adImg'); if(AD_IMG_URL){ ad.style.backgroundImage=`url('${AD_IMG_URL}')`; ad.style.backgroundSize='cover'; ad.style.backgroundPosition='center'; }
