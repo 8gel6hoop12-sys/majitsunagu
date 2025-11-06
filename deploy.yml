@@ -1,0 +1,56 @@
+name: Deploy Vite app to GitHub Pages
+
+on:
+  push:
+    branches: [ main ]   # ← main に push されたら自動デプロイ
+  workflow_dispatch:     # ← 手動実行も可能
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install deps
+        run: npm ci || npm install
+
+      # ★ GitHub Pages は /<リポ名>/ 配信なので BASE_PATH を注入
+      - name: Build (inject BASE_PATH for Pages)
+        env:
+          BASE_PATH: /majitunagu/
+          IS_PREVIEW: false
+        run: |
+          npm run build
+          # SPA の直リンク/リロード 404 回避のため 404.html を作る
+          cp out/index.html out/404.html
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./out   # ← vite.config.ts の outDir=out をそのまま
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    environment:
+      name: github-pages
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
